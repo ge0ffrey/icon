@@ -6,7 +6,6 @@ import java.io.IOException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.optaplanner.examples.icon.domain.Forecast;
-import org.optaplanner.examples.icon.parser.forecast.ForecastParser;
 
 public class ForecastParserTest extends AbstractParserTest {
 

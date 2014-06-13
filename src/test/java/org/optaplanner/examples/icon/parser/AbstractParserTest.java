@@ -22,10 +22,6 @@ public abstract class AbstractParserTest {
 
     };
 
-    public File getFileUnderTest() {
-        return this.fileUnderTest;
-    }
-
     @Parameters(name = "{0}")
     public static Collection<Object[]> getInputData() {
         final Collection<Object[]> problems = new LinkedList<Object[]>();
@@ -39,6 +35,10 @@ public abstract class AbstractParserTest {
 
     public AbstractParserTest(final File fileUnderTest) {
         this.fileUnderTest = fileUnderTest;
+    }
+
+    public File getFileUnderTest() {
+        return this.fileUnderTest;
     }
 
 }

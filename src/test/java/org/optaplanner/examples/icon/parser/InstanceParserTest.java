@@ -6,16 +6,16 @@ import java.io.IOException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-public class SchedulingParserTest extends AbstractParserTest {
+public class InstanceParserTest extends AbstractParserTest {
 
-    public SchedulingParserTest(final File fileUnderTest) {
+    public InstanceParserTest(final File fileUnderTest) {
         super(new File(fileUnderTest, "instance.txt"));
     }
 
     @Test
     public void testParsing() {
         try {
-            final SchedulingParser p = SchedulingParser.parse(this.getFileUnderTest());
+            final InstanceParser p = InstanceParser.parse(this.getFileUnderTest());
             Assertions.assertThat(p).isNotNull();
             Assertions.assertThat(p.getMachines()).isNotEmpty();
             Assertions.assertThat(p.getTasks()).isNotEmpty();

@@ -8,10 +8,6 @@ import java.math.BigDecimal;
 
 public class Forecast {
 
-    public static ForecastBuilder withPeriods(final int numPeriods) {
-        return new ForecastBuilder(numPeriods);
-    }
-
     public static final class ForecastBuilder {
 
         private final Int2ObjectSortedMap<BigDecimal> forecasts = new Int2ObjectRBTreeMap<BigDecimal>();
@@ -39,10 +35,36 @@ public class Forecast {
 
     }
 
+    public static ForecastBuilder withPeriods(final int numPeriods) {
+        return new ForecastBuilder(numPeriods);
+    }
+
     private final Int2ObjectSortedMap<BigDecimal> forecasts;
 
     private Forecast(final Int2ObjectSortedMap<BigDecimal> forecasts) {
         this.forecasts = new Int2ObjectAVLTreeMap<BigDecimal>(forecasts);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Forecast)) {
+            return false;
+        }
+        final Forecast other = (Forecast) obj;
+        if (this.forecasts == null) {
+            if (other.forecasts != null) {
+                return false;
+            }
+        } else if (!this.forecasts.equals(other.forecasts)) {
+            return false;
+        }
+        return true;
     }
 
     public BigDecimal getForPeriod(final int period) {
@@ -51,6 +73,25 @@ public class Forecast {
             throw new IllegalArgumentException("Unknown forecasting period: " + period);
         }
         return forecast;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.forecasts == null) ? 0 : this.forecasts.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("Forecast [");
+        if (this.forecasts != null) {
+            builder.append("forecasts=").append(this.forecasts);
+        }
+        builder.append("]");
+        return builder.toString();
     }
 
 }

@@ -1,4 +1,4 @@
-package org.optaplanner.examples.icon.parser.forecast;
+package org.optaplanner.examples.icon.parser;
 
 import java.io.File;
 import java.io.IOException;

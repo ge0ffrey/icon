@@ -12,25 +12,13 @@ import org.apache.commons.io.FileUtils;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Task;
 
-public final class SchedulingParser {
+public final class InstanceParser {
 
-    public Set<Task> getTasks() {
-        return this.tasks;
-    }
-
-    public int getTimeResolution() {
-        return this.timeResolution;
-    }
-
-    public Set<Machine> getMachines() {
-        return this.machines;
-    }
-
-    public static SchedulingParser parse(final File instance) throws IOException {
+    public static InstanceParser parse(final File instance) throws IOException {
         final List<String> lines = FileUtils.readLines(instance);
         final int timeResolution = Integer.valueOf(lines.get(0));
         final int resourceCount = Integer.valueOf(lines.get(1));
-        final SchedulingParser p = new SchedulingParser(timeResolution);
+        final InstanceParser p = new InstanceParser(timeResolution);
         // parse the machine list
         final int machineCount = Integer.valueOf(lines.get(2));
         int line = 3;
@@ -77,22 +65,36 @@ public final class SchedulingParser {
         return p;
     }
 
-    private final int timeResolution;
     private final Set<Machine> machines = new LinkedHashSet<Machine>();
+
     private final Set<Task> tasks = new LinkedHashSet<Task>();
 
-    private SchedulingParser(final int timeResolution) {
+    private final int timeResolution;
+
+    private InstanceParser(final int timeResolution) {
         this.timeResolution = timeResolution;
     }
 
-    private SchedulingParser addMachine(final Machine m) {
+    private InstanceParser addMachine(final Machine m) {
         this.machines.add(m);
         return this;
     }
 
-    private SchedulingParser addTask(final Task t) {
+    private InstanceParser addTask(final Task t) {
         this.tasks.add(t);
         return this;
+    }
+
+    public Set<Machine> getMachines() {
+        return this.machines;
+    }
+
+    public Set<Task> getTasks() {
+        return this.tasks;
+    }
+
+    public int getTimeResolution() {
+        return this.timeResolution;
     }
 
 }
