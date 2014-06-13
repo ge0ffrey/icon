@@ -1,5 +1,21 @@
 package org.optaplanner.examples.icon;
 
 import org.optaplanner.core.api.score.buildin.bendable.BendableScoreHolder;
+import org.optaplanner.examples.icon.domain.Task;
 
 global BendableScoreHolder scoreHolder;
+
+rule "Unassigned tasks"
+when
+    $t: Task(actualStartDate < 0)
+then
+    scoreHolder.addHardConstraintMatch(kcontext, 0, -1);
+end
+
+rule "Unscheduled tasks"
+when
+    $t: Task(executor == null)
+then
+    scoreHolder.addHardConstraintMatch(kcontext, 0, -1);
+end
+

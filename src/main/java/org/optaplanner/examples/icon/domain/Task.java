@@ -13,7 +13,7 @@ import org.optaplanner.core.impl.domain.valuerange.buildin.primint.IntValueRange
 public class Task {
 
     // variables
-    private int actualStartDate;
+    private int actualStartDate = -1;
     // constants
     private int dueBy;
     private int duration;
@@ -117,13 +117,17 @@ public class Task {
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("Task [id=").append(this.id).append(", duration=").append(this.duration).append(", earliestStart=").append(this.earliestStart).append(", dueBy=").append(this.dueBy).append(", ");
-        if (this.powerConsumption != null) {
-            builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
+        StringBuilder builder = new StringBuilder();
+        builder.append("Task [id=").append(id).append(", dueBy=").append(dueBy).append(", duration=").append(duration).append(", earliestStart=").append(earliestStart).append(", ");
+        if (powerConsumption != null) {
+            builder.append("powerConsumption=").append(powerConsumption).append(", ");
         }
-        if (this.resourceConsumption != null) {
-            builder.append("resourceConsumption=").append(Arrays.toString(this.resourceConsumption));
+        if (resourceConsumption != null) {
+            builder.append("resourceConsumption=").append(Arrays.toString(resourceConsumption)).append(", ");
+        }
+        builder.append("actualStartDate=").append(actualStartDate).append(", ");
+        if (executor != null) {
+            builder.append("executor=").append(executor);
         }
         builder.append("]");
         return builder.toString();
