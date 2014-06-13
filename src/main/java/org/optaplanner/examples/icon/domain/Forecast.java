@@ -45,6 +45,10 @@ public class Forecast {
         this.forecasts = new Int2ObjectAVLTreeMap<BigDecimal>(forecasts);
     }
 
+    public int countPeriods() {
+        return this.forecasts.size();
+    }
+
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
@@ -67,7 +71,7 @@ public class Forecast {
         return true;
     }
 
-    public BigDecimal getForPeriod(final int period) {
+    public BigDecimal forPeriod(final int period) {
         final BigDecimal forecast = this.forecasts.get(period);
         if (forecast == null) {
             throw new IllegalArgumentException("Unknown forecasting period: " + period);

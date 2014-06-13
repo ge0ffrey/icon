@@ -12,13 +12,14 @@ import org.apache.commons.io.FileUtils;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Task;
 
-public final class InstanceParser {
+final class InstanceParser {
 
+    // FIXME a lot of magic constants
     public static InstanceParser parse(final File instance) throws IOException {
         final List<String> lines = FileUtils.readLines(instance);
         final int timeResolution = Integer.valueOf(lines.get(0));
         final int resourceCount = Integer.valueOf(lines.get(1));
-        final InstanceParser p = new InstanceParser(timeResolution);
+        final InstanceParser p = new InstanceParser(timeResolution, resourceCount);
         // parse the machine list
         final int machineCount = Integer.valueOf(lines.get(2));
         int line = 3;
@@ -67,12 +68,14 @@ public final class InstanceParser {
 
     private final Set<Machine> machines = new LinkedHashSet<Machine>();
 
-    private final Set<Task> tasks = new LinkedHashSet<Task>();
+    private final int resourceCount;
 
+    private final Set<Task> tasks = new LinkedHashSet<Task>();
     private final int timeResolution;
 
-    private InstanceParser(final int timeResolution) {
+    private InstanceParser(final int timeResolution, final int resourceCount) {
         this.timeResolution = timeResolution;
+        this.resourceCount = resourceCount;
     }
 
     private InstanceParser addMachine(final Machine m) {
@@ -87,6 +90,10 @@ public final class InstanceParser {
 
     public Set<Machine> getMachines() {
         return this.machines;
+    }
+
+    public int getResourceCount() {
+        return this.resourceCount;
     }
 
     public Set<Task> getTasks() {

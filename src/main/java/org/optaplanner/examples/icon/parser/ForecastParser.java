@@ -8,7 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.optaplanner.examples.icon.domain.Forecast;
 import org.optaplanner.examples.icon.domain.Forecast.ForecastBuilder;
 
-public class ForecastParser {
+final class ForecastParser {
 
     public static Forecast parse(final File forecasts) throws IOException {
         final List<String> lines = FileUtils.readLines(forecasts);
