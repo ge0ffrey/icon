@@ -5,9 +5,15 @@ import org.optaplanner.examples.icon.domain.Task;
 
 global BendableScoreHolder scoreHolder;
 
+// process forecasts
+
+
+
+// actually add constraints
+
 rule "Unassigned tasks"
 when
-    $t: Task(actualStartDate < 0)
+    $t: Task(startPeriod == null)
 then
     scoreHolder.addHardConstraintMatch(kcontext, 0, -1);
 end

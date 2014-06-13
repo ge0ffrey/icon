@@ -21,7 +21,7 @@
     <unionMoveSelector>
       <changeMoveSelector>
         <valueSelector>
-          <variableName>actualStartDate</variableName>
+          <variableName>startPeriod</variableName>
         </valueSelector>
       </changeMoveSelector>
       <changeMoveSelector>

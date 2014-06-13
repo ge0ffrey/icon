@@ -12,7 +12,7 @@ public class ProblemParser {
         final Forecast f = ForecastParser.parse(forecast);
         final InstanceParser i = InstanceParser.parse(instance);
         // FIXME magic constant
-        if (i.getTimeResolution() != 1440 / f.countPeriods()) {
+        if (i.getTimeResolution() != 1440 / f.getAll().size()) {
             throw new IllegalStateException("Number of periods does not match.");
         }
         return new Schedule(i.getTimeResolution(), i.getResourceCount(), i.getMachines(), i.getTasks(), f);

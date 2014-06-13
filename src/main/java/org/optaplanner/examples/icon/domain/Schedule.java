@@ -2,6 +2,7 @@ package org.optaplanner.examples.icon.domain;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Set;
 
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
@@ -48,7 +49,11 @@ public class Schedule implements Solution<BendableScore> {
 
     @Override
     public Collection<? extends Object> getProblemFacts() {
-        return Collections.emptySet();
+        final Collection<Object> facts = new LinkedList<Object>();
+        facts.addAll(this.getForecast().getAll());
+        facts.addAll(Period.getAll());
+        facts.addAll(Resource.getAll());
+        return facts;
     }
 
     public int getResolution() {

@@ -1,28 +1,124 @@
 package org.optaplanner.examples.icon.domain;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Random;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.valuerange.ValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
-import org.optaplanner.core.impl.domain.valuerange.buildin.primint.IntValueRange;
+import org.optaplanner.core.impl.domain.valuerange.AbstractCountableValueRange;
+import org.optaplanner.core.impl.domain.valuerange.util.ValueRangeIterator;
+import org.optaplanner.core.impl.solver.random.RandomUtils;
 
 @PlanningEntity
 public class Task {
 
-    // variables
-    private int actualStartDate = -1;
+    private static final class PeriodValueRange extends AbstractCountableValueRange<Period> {
+
+        private class OriginalPeriodValueRangeIterator extends ValueRangeIterator<Period> {
+
+            private int upcoming = PeriodValueRange.this.from;
+
+            @Override
+            public boolean hasNext() {
+                return this.upcoming < PeriodValueRange.this.to;
+            }
+
+            @Override
+            public Period next() {
+                if (this.upcoming >= PeriodValueRange.this.to) {
+                    throw new NoSuchElementException();
+                }
+                final int next = this.upcoming;
+                this.upcoming += PeriodValueRange.this.incrementUnit;
+                return Period.get(next);
+            }
+
+        }
+
+        private class RandomPeriodValueRangeIterator extends ValueRangeIterator<Period> {
+
+            private final long size = PeriodValueRange.this.getSize();
+            private final Random workingRandom;
+
+            public RandomPeriodValueRangeIterator(final Random workingRandom) {
+                this.workingRandom = workingRandom;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return this.size > 0L;
+            }
+
+            @Override
+            public Period next() {
+                final long index = RandomUtils.nextLong(this.workingRandom, this.size);
+                final int value = (int) (index * PeriodValueRange.this.incrementUnit + PeriodValueRange.this.from);
+                return Period.get(value);
+            }
+
+        }
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 633727612190475329L;
+
+        private final int from, to;
+
+        private final int incrementUnit = 1;
+
+        public PeriodValueRange(final int min, final int max) {
+            this.from = min;
+            this.to = max;
+        }
+
+        @Override
+        public boolean contains(final Period value) {
+            final int id = value.getId();
+            return (id >= this.from && id <= this.to);
+        }
+
+        @Override
+        public Iterator<Period> createOriginalIterator() {
+            return new OriginalPeriodValueRangeIterator();
+        }
+
+        @Override
+        public Iterator<Period> createRandomIterator(final Random workingRandom) {
+            return new RandomPeriodValueRangeIterator(workingRandom);
+        }
+
+        @Override
+        public Period get(final long index) {
+            // FIXME types
+            return Period.get((int) (this.from + index));
+        }
+
+        @Override
+        public long getSize() {
+            return this.to - this.from + 1;
+        }
+    }
+
     // constants
-    private int dueBy;
+    private Period dueBy;
     private int duration;
-    private int earliestStart;
+    private Period earliestStart;
     private Machine executor;
     private int id;
-
     private BigDecimal powerConsumption;
-    private int[] resourceConsumption;
+
+    private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
+    // variables
+    private Period startPeriod;
 
     protected Task() {
         // FIXME planner cloning prevents immutability
@@ -31,14 +127,11 @@ public class Task {
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption) {
         this.id = id;
         this.duration = duration;
-        this.earliestStart = earliestStart;
-        this.dueBy = dueBy;
+        this.earliestStart = Period.get(earliestStart);
+        this.dueBy = Period.get(dueBy);
         this.powerConsumption = powerUse;
-        this.resourceConsumption = new int[resourceConsumption.size()];
-        int i = 0;
-        for (final Integer consumption : resourceConsumption) {
-            this.resourceConsumption[i] = consumption;
-            i++;
+        for (int i = 0; i < resourceConsumption.size(); i++) {
+            this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
         }
     }
 
@@ -60,12 +153,7 @@ public class Task {
         return true;
     }
 
-    @PlanningVariable(valueRangeProviderRefs = {"possibleStartDateRange"})
-    public int getActualStartDate() {
-        return this.actualStartDate;
-    }
-
-    public int getDueBy() {
+    public Period getDueBy() {
         return this.dueBy;
     }
 
@@ -73,7 +161,7 @@ public class Task {
         return this.duration;
     }
 
-    public int getEarliestStart() {
+    public Period getEarliestStart() {
         return this.earliestStart;
     }
 
@@ -90,13 +178,18 @@ public class Task {
         return this.powerConsumption;
     }
 
-    public int getResourceConsumption(final int resourceId) {
-        return this.resourceConsumption[resourceId];
+    public int getResourceConsumption(final Resource resource) {
+        return this.resourceConsumption.getInt(resource);
     }
 
-    @ValueRangeProvider(id = "possibleStartDateRange")
-    public IntValueRange getStartDateValueRange() {
-        return new IntValueRange(this.getEarliestStart(), this.getDueBy() - this.getDuration());
+    @PlanningVariable(valueRangeProviderRefs = {"possibleStartPeriodRange"})
+    public Period getStartPeriod() {
+        return this.startPeriod;
+    }
+
+    @ValueRangeProvider(id = "possibleStartPeriodRange")
+    public ValueRange<Period> getStartPeriodValueRange() {
+        return new PeriodValueRange(this.getEarliestStart().getId(), this.getDueBy().getId() - this.getDuration());
     }
 
     @Override
@@ -107,27 +200,27 @@ public class Task {
         return result;
     }
 
-    public void setActualStartDate(final int actualStartDate) {
-        this.actualStartDate = actualStartDate;
-    }
-
     public void setExecutor(final Machine executor) {
         this.executor = executor;
     }
 
+    public void setStartPeriod(final Period startPeriod) {
+        this.startPeriod = startPeriod;
+    }
+
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Task [id=").append(id).append(", dueBy=").append(dueBy).append(", duration=").append(duration).append(", earliestStart=").append(earliestStart).append(", ");
-        if (powerConsumption != null) {
-            builder.append("powerConsumption=").append(powerConsumption).append(", ");
+        final StringBuilder builder = new StringBuilder();
+        builder.append("Task [id=").append(this.id).append(", dueBy=").append(this.dueBy).append(", duration=").append(this.duration).append(", earliestStart=").append(this.earliestStart).append(", ");
+        if (this.powerConsumption != null) {
+            builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
         }
-        if (resourceConsumption != null) {
-            builder.append("resourceConsumption=").append(Arrays.toString(resourceConsumption)).append(", ");
+        if (this.resourceConsumption != null) {
+            builder.append("resourceConsumption=").append(this.resourceConsumption).append(", ");
         }
-        builder.append("actualStartDate=").append(actualStartDate).append(", ");
-        if (executor != null) {
-            builder.append("executor=").append(executor);
+        builder.append("startPeriod=").append(this.startPeriod).append(", ");
+        if (this.executor != null) {
+            builder.append("executor=").append(this.executor);
         }
         builder.append("]");
         return builder.toString();

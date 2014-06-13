@@ -1,12 +1,14 @@
 package org.optaplanner.examples.icon.domain;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 
 public class Machine {
 
-    private final int[] capacities;
+    private final Object2IntMap<Resource> capacities = new Object2IntOpenHashMap<Resource>();
 
     private final BigDecimal costOnShutdown;
 
@@ -21,11 +23,8 @@ public class Machine {
         this.costWhenIdle = costIdle;
         this.costOnStartup = costUp;
         this.costOnShutdown = costDown;
-        this.capacities = new int[resourceCapacity.size()];
-        int i = 0;
-        for (final Integer capacity : resourceCapacity) {
-            this.capacities[i] = capacity;
-            i++;
+        for (int i = 0; i < resourceCapacity.size(); i++) {
+            this.capacities.put(Resource.get(i), resourceCapacity.get(i));
         }
     }
 
@@ -63,8 +62,8 @@ public class Machine {
         return this.id;
     }
 
-    public int getResourceCapacity(final int resourceId) {
-        return this.capacities[resourceId];
+    public int getResourceCapacity(final Resource resource) {
+        return this.capacities.get(resource);
     }
 
     @Override
@@ -79,17 +78,17 @@ public class Machine {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("Machine [id=").append(this.id).append(", ");
-        if (this.costWhenIdle != null) {
-            builder.append("costWhenIdle=").append(this.costWhenIdle).append(", ");
-        }
         if (this.costOnStartup != null) {
             builder.append("costOnStartup=").append(this.costOnStartup).append(", ");
         }
         if (this.costOnShutdown != null) {
             builder.append("costOnShutdown=").append(this.costOnShutdown).append(", ");
         }
+        if (this.costWhenIdle != null) {
+            builder.append("costWhenIdle=").append(this.costWhenIdle).append(", ");
+        }
         if (this.capacities != null) {
-            builder.append("capacities=").append(Arrays.toString(this.capacities));
+            builder.append("capacities=").append(this.capacities);
         }
         builder.append("]");
         return builder.toString();

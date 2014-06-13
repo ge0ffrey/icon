@@ -1,16 +1,17 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 
 public class Forecast {
 
     public static final class ForecastBuilder {
 
-        private final Int2ObjectSortedMap<BigDecimal> forecasts = new Int2ObjectRBTreeMap<BigDecimal>();
+        private final Object2ObjectMap<Period, BigDecimal> forecasts = new Object2ObjectOpenHashMap<Period, BigDecimal>();
         private final int maxValue;
 
         private ForecastBuilder(final int numPeriods) {
@@ -25,7 +26,7 @@ public class Forecast {
             if (this.forecasts.containsKey(periodId)) {
                 throw new IllegalArgumentException("Already seen forecast for period: " + periodId);
             }
-            this.forecasts.put(periodId, new BigDecimal(forecast));
+            this.forecasts.put(Period.get(Integer.valueOf(period)), new BigDecimal(forecast));
             return this;
         }
 
@@ -39,14 +40,13 @@ public class Forecast {
         return new ForecastBuilder(numPeriods);
     }
 
-    private final Int2ObjectSortedMap<BigDecimal> forecasts;
+    private final Object2ObjectMap<Period, PeriodPowerConsumption> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerConsumption>();
 
-    private Forecast(final Int2ObjectSortedMap<BigDecimal> forecasts) {
-        this.forecasts = new Int2ObjectAVLTreeMap<BigDecimal>(forecasts);
-    }
-
-    public int countPeriods() {
-        return this.forecasts.size();
+    private Forecast(final Object2ObjectMap<Period, BigDecimal> forecasts) {
+        for (final Entry<Period, BigDecimal> entry : forecasts.object2ObjectEntrySet()) {
+            final Period slot = entry.getKey();
+            this.forecasts.put(slot, new PeriodPowerConsumption(slot, entry.getValue()));
+        }
     }
 
     @Override
@@ -71,8 +71,12 @@ public class Forecast {
         return true;
     }
 
-    public BigDecimal forPeriod(final int period) {
-        final BigDecimal forecast = this.forecasts.get(period);
+    public Collection<PeriodPowerConsumption> getAll() {
+        return this.forecasts.values();
+    }
+
+    public PeriodPowerConsumption getForPeriod(final Period period) {
+        final PeriodPowerConsumption forecast = this.forecasts.get(period);
         if (forecast == null) {
             throw new IllegalArgumentException("Unknown forecasting period: " + period);
         }
