@@ -4,19 +4,29 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
+import org.optaplanner.core.api.domain.variable.PlanningVariable;
+import org.optaplanner.core.impl.domain.valuerange.buildin.primint.IntValueRange;
+
+@PlanningEntity
 public class Task {
 
-    private final int dueBy;
+    // variables
+    private int actualStartDate;
+    // constants
+    private int dueBy;
+    private int duration;
+    private int earliestStart;
+    private Machine executor;
+    private int id;
 
-    private final int duration;
+    private BigDecimal powerConsumption;
+    private int[] resourceConsumption;
 
-    private final int earliestStart;
-
-    private final int id;
-
-    private final BigDecimal powerConsumption;
-
-    private final int[] resourceConsumption;
+    protected Task() {
+        // FIXME planner cloning prevents immutability
+    }
 
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption) {
         this.id = id;
@@ -50,6 +60,11 @@ public class Task {
         return true;
     }
 
+    @PlanningVariable(valueRangeProviderRefs = {"possibleStartDateRange"})
+    public int getActualStartDate() {
+        return this.actualStartDate;
+    }
+
     public int getDueBy() {
         return this.dueBy;
     }
@@ -60,6 +75,11 @@ public class Task {
 
     public int getEarliestStart() {
         return this.earliestStart;
+    }
+
+    @PlanningVariable(valueRangeProviderRefs = {"possibleExecutorRange"})
+    public Machine getExecutor() {
+        return this.executor;
     }
 
     public int getId() {
@@ -74,12 +94,25 @@ public class Task {
         return this.resourceConsumption[resourceId];
     }
 
+    @ValueRangeProvider(id = "possibleStartDateRange")
+    public IntValueRange getStartDateValueRange() {
+        return new IntValueRange(this.getEarliestStart(), this.getDueBy() - this.getDuration());
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + this.id;
         return result;
+    }
+
+    public void setActualStartDate(final int actualStartDate) {
+        this.actualStartDate = actualStartDate;
+    }
+
+    public void setExecutor(final Machine executor) {
+        this.executor = executor;
     }
 
     @Override

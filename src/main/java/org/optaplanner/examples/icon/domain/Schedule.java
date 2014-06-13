@@ -1,19 +1,33 @@
 package org.optaplanner.examples.icon.domain;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class Schedule {
+import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
+import org.optaplanner.core.api.domain.solution.PlanningSolution;
+import org.optaplanner.core.api.domain.solution.Solution;
+import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
+import org.optaplanner.core.api.score.buildin.bendable.BendableScore;
 
-    private final Forecast forecast;
+@PlanningSolution
+public class Schedule implements Solution<BendableScore> {
 
-    private final Set<Machine> machines;
+    private Forecast forecast;
 
-    private final int resolution;
+    private Set<Machine> machines;
 
-    private final int resourceCount;
+    private int resolution;
 
-    private final Set<Task> tasks;
+    private int resourceCount;
+
+    private BendableScore score;
+
+    private Set<Task> tasks;
+
+    protected Schedule() {
+        // FIXME planner cloning prevents immutability
+    }
 
     public Schedule(final int resolution, final int resourceCount, final Set<Machine> machines, final Set<Task> tasks, final Forecast forecast) {
         this.resolution = resolution;
@@ -27,8 +41,14 @@ public class Schedule {
         return this.forecast;
     }
 
+    @ValueRangeProvider(id = "possibleExecutorRange")
     public Set<Machine> getMachines() {
         return this.machines;
+    }
+
+    @Override
+    public Collection<? extends Object> getProblemFacts() {
+        return Collections.emptySet();
     }
 
     public int getResolution() {
@@ -39,8 +59,19 @@ public class Schedule {
         return this.resourceCount;
     }
 
+    @Override
+    public BendableScore getScore() {
+        return this.score;
+    }
+
+    @PlanningEntityCollectionProperty
     public Set<Task> getTasks() {
         return this.tasks;
+    }
+
+    @Override
+    public void setScore(final BendableScore score) {
+        this.score = score;
     }
 
 }

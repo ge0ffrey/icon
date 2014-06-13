@@ -1,0 +1,5 @@
+package org.optaplanner.examples.icon;
+
+import org.optaplanner.core.api.score.buildin.bendable.BendableScoreHolder;
+
+global BendableScoreHolder scoreHolder;
