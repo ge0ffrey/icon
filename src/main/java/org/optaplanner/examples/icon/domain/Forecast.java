@@ -15,7 +15,7 @@ public class Forecast {
     
     public static final class ForecastBuilder {
         
-        private final Int2ObjectSortedMap<BigDecimal> forecasts = new Int2ObjectRBTreeMap<>();
+        private final Int2ObjectSortedMap<BigDecimal> forecasts = new Int2ObjectRBTreeMap<BigDecimal>();
         private final int maxValue;
         
         private ForecastBuilder(final int numPeriods) {
@@ -43,7 +43,7 @@ public class Forecast {
     private final Int2ObjectSortedMap<BigDecimal> forecasts;
 
     private Forecast(Int2ObjectSortedMap<BigDecimal> forecasts) {
-        this.forecasts = new Int2ObjectAVLTreeMap<>(forecasts);
+        this.forecasts = new Int2ObjectAVLTreeMap<BigDecimal>(forecasts);
     }
     
     public BigDecimal getForPeriod(final int period) {
