@@ -10,16 +10,16 @@ import org.optaplanner.examples.icon.parser.forecast.ForecastParser;
 
 public class ForecastParserTest extends AbstractParserTest {
 
-    public ForecastParserTest(File fileUnderTest) {
+    public ForecastParserTest(final File fileUnderTest) {
         super(new File(fileUnderTest, "forecast.txt"));
     }
-    
+
     @Test
     public void testParsing() {
         try {
-            Forecast f = ForecastParser.parse(this.getFileUnderTest());
+            final Forecast f = ForecastParser.parse(this.getFileUnderTest());
             Assertions.assertThat(f).isNotNull();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Assertions.fail("Failed parsing forecast file.", e);
         }
     }
