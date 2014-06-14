@@ -30,7 +30,7 @@
       <swapMoveSelector/>
     </unionMoveSelector>
     <acceptor>
-      <entityTabuRatio>0.3</entityTabuRatio>
+      <entityTabuRatio>0.1</entityTabuRatio>
     </acceptor>
     <forager>
       <acceptedCountLimit>4</acceptedCountLimit>

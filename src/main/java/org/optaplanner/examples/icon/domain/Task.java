@@ -117,9 +117,11 @@ public class Task {
     private Period earliestStart;
     private Machine executor;
     private int id;
-    private BigDecimal powerConsumption;
+    private Collection<Period> occupiedPeriods = Collections.emptySet();
 
+    private BigDecimal powerConsumption;
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
+
     // variables
     private Period startPeriod;
 
@@ -179,16 +181,7 @@ public class Task {
 
     // FIXME changes with start period; should be shadow?
     public Collection<Period> getOccupiedPeriods() {
-        final Period startPeriod = this.getStartPeriod();
-        if (startPeriod == null) {
-            return Collections.emptySet();
-        }
-        final int start = startPeriod.getId();
-        final Collection<Period> result = new HashSet<Period>();
-        for (int i = start; i < start + this.duration; i++) {
-            result.add(Period.get(i));
-        }
-        return Collections.unmodifiableCollection(result);
+        return this.occupiedPeriods;
     }
 
     public BigDecimal getPowerConsumption() {
@@ -222,7 +215,22 @@ public class Task {
     }
 
     public void setStartPeriod(final Period startPeriod) {
+        if (this.startPeriod == startPeriod) {
+            // no change
+            return;
+        }
         this.startPeriod = startPeriod;
+        // calculate and cache periods that are occupied by this new task assignment
+        if (startPeriod == null) {
+            this.occupiedPeriods = Collections.emptySet();
+            return;
+        }
+        final int start = startPeriod.getId();
+        final Collection<Period> result = new HashSet<Period>();
+        for (int i = start; i < start + this.duration; i++) {
+            result.add(Period.get(i));
+        }
+        this.occupiedPeriods = Collections.unmodifiableCollection(result);
     }
 
     @Override
