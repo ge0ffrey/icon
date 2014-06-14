@@ -10,7 +10,9 @@ public class Resource {
     private static final Int2ObjectSortedMap<Resource> RESOURCES = new Int2ObjectRBTreeMap<Resource>();
 
     public synchronized static Resource get(final int id) {
-        if (!Resource.RESOURCES.containsKey(id)) {
+        if (id < 0) {
+            throw new IllegalArgumentException("Resource IDs start at 0, you asked for: " + id);
+        } else if (!Resource.RESOURCES.containsKey(id)) {
             Resource.RESOURCES.put(id, new Resource(id));
         }
         return Resource.RESOURCES.get(id);
