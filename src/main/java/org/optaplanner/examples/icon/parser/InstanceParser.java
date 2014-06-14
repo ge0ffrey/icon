@@ -42,7 +42,7 @@ final class InstanceParser {
         for (int i = line + 1; i < line + taskCount * 2; i += 2) {
             final String[] properties = lines.get(i).split("\\Q \\E");
             final int duration = Integer.valueOf(properties[1]);
-            if (duration < 0 || duration > maxTime) {
+            if (duration <= 0 || duration > maxTime) {
                 throw new IllegalStateException("Invalid duration: " + duration);
             }
             final int earliestStart = Integer.valueOf(properties[2]);

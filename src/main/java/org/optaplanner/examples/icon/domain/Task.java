@@ -111,6 +111,9 @@ public class Task {
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
+        if (this.getDuration() == 0) {
+            throw new IllegalStateException("FIXME Task has zero duration. What to do about them?");
+        }
         return new PeriodValueRange(this.getEarliestStart().getId(), this.getDueBy().getId() - this.getDuration() + 1);
     }
 
