@@ -10,6 +10,9 @@ public class Period implements Comparable<Period> {
     private static final Int2ObjectSortedMap<Period> PERIODS = new Int2ObjectRBTreeMap<Period>();
 
     public synchronized static Period get(final int id) {
+        if (id < 0) {
+            throw new IllegalStateException("The first period is #0.");
+        }
         if (!Period.PERIODS.containsKey(id)) {
             Period.PERIODS.put(id, new Period(id));
         }
@@ -26,6 +29,17 @@ public class Period implements Comparable<Period> {
         this.id = id;
     }
 
+    @Override
+    public int compareTo(final Period o) {
+        if (o.getId() > this.getId()) {
+            return -1;
+        } else if (o.getId() == this.getId()) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
     public int getId() {
         return this.id;
     }
@@ -35,17 +49,6 @@ public class Period implements Comparable<Period> {
         final StringBuilder builder = new StringBuilder();
         builder.append("Period [id=").append(this.id).append("]");
         return builder.toString();
-    }
-
-    @Override
-    public int compareTo(Period o) {
-        if (o.getId() > this.getId()) {
-            return -1;
-        } else if (o.getId() == this.getId()) {
-            return 0;
-        } else {
-            return 1;
-        }
     }
 
 }
