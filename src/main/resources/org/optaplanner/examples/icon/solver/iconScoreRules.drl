@@ -77,10 +77,10 @@ when
     not Task(
         isInitialized(),
         executor == $m,
-        $p >= Period.get($min),
+        $p > Period.get($min),
         $p >= startPeriod,
         $p <= finalPeriod,
-        $p <= Period.get($max)
+        $p < Period.get($max)
     )
 then
     // FIXME this is stupid; need to figure out how to shutdown/startup instead
