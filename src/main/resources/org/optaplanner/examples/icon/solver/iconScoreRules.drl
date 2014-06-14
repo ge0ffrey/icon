@@ -14,6 +14,23 @@ import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunc
 
 global HardSoftBigDecimalScoreHolder scoreHolder;
 
+// inner types
+declare GoneIdle
+    machine: Machine
+    on: Period
+end 
+
+declare Shutdown
+    machine: Machine
+    on: Period
+end 
+
+declare Startup
+    machine: Machine
+    on: Period
+    fromIdle : boolean
+end 
+
 // hard constraints
 rule "Resource utilization"
 when
@@ -55,34 +72,72 @@ then
     scoreHolder.addSoftConstraintMatch(kcontext, $consumption.multiply($cost.getCost()).negate());
 end
 
-rule "For every machine that has a task, we must count one startup and shutdown"
+// detect idle, startup and shutdown
+rule "Detect going idle"
 when
-    $m: Machine()
-    exists Task(isInitialized(), executor == $m)
+    $t: Task(isInitialized(), !getShutdownPossible(), $m: executor, $end: finalPeriod)
+    not Task(isInitialized(), executor == $m, startPeriod <= $end, finalPeriod > $end)
 then
-    BigDecimal result = $m.getCostOnStartup().add($m.getCostOnShutdown()).negate();
-    scoreHolder.addSoftConstraintMatch(kcontext, result);
+    insertLogical(new GoneIdle($m, $end));
 end
 
-rule "When a machine has more than 1 task and an idle period inbetween tasks, we consider it idle"
+rule "Detect shutdown"
+when
+    $t: Task(isInitialized(), getShutdownPossible(), $m: executor, $end: finalPeriod)
+    not Task(isInitialized(), executor == $m, startPeriod <= $end, finalPeriod > $end)
+then
+    insertLogical(new Shutdown($m, $end));
+end
+
+rule "Detect startup"
+when
+    $t: Task(isInitialized(), $m: executor, $start: startPeriod)
+    not Task(isInitialized(), executor == $m, startPeriod < $start, finalPeriod >= $start)
+then
+    insertLogical(new Startup($m, $start, false));
+end
+
+// penalize idle, startup, shutdown
+rule "Detect and penalize idle periods"
+no-loop
 when
     $m: Machine()
-    $p: Period()
-    exists Task(isInitialized(), executor == $m)
-    accumulate (
-        Task(isInitialized(), executor == $m, $start: startPeriod, $end: finalPeriod);
-        $min: min($start.getId()),
-        $max: max($end.getId())
-    )
-    not Task(
-        isInitialized(),
-        executor == $m,
-        $p > Period.get($min),
-        $p >= startPeriod,
-        $p <= finalPeriod,
-        $p < Period.get($max)
+    GoneIdle(machine == $m, $s: on)
+    $nextStartup: Startup(machine == $m, on > $s, $s2: on)
+    not Startup(on > $s, on < $s2) // make sure there is no other startup between $s and $s2
+    $totalCost: BigDecimal() from accumulate (
+        PeriodPowerCost(period > $s, period < $s2, $c: cost);
+        sumbd( $c.multiply($m.getCostWhenIdle()) ) 
     )
 then
-    // FIXME this is stupid; need to figure out how to shutdown/startup instead
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostWhenIdle().negate());
+    modify ($nextStartup) {
+        setFromIdle(true);
+    }
+    scoreHolder.addSoftConstraintMatch(kcontext, $totalCost.negate());
+end
+
+rule "Penalize startups from shutdowns"
+when
+    $m: Machine()
+    $startups: Set ( size > 0 ) from accumulate (
+        Startup(!fromIdle, machine == $m, $s: on);
+        collectSet ( $s )
+    )
+then
+    BigDecimal size = BigDecimal.valueOf($startups.size());
+    BigDecimal cost = $m.getCostOnStartup().multiply(size).negate();
+    scoreHolder.addSoftConstraintMatch(kcontext, cost);
+end
+
+rule "Penalize shutdowns"
+when
+    $m: Machine()
+    $shutdowns: Set ( size > 0 ) from accumulate (
+        Shutdown(machine == $m, $s: on);
+        collectSet ( $s )
+    )
+then
+    BigDecimal size = BigDecimal.valueOf($shutdowns.size());
+    BigDecimal cost = $m.getCostOnShutdown().multiply(size).negate();
+    scoreHolder.addSoftConstraintMatch(kcontext, cost);
 end
