@@ -2,15 +2,15 @@ package org.optaplanner.examples.icon.domain;
 
 import java.math.BigDecimal;
 
-public class PeriodPowerConsumption {
+public class PeriodPowerCost {
+
+    private final BigDecimal cost;
 
     private final Period period;
 
-    private final BigDecimal powerConsumption;
-
-    PeriodPowerConsumption(final Period period, final BigDecimal consumption) {
+    PeriodPowerCost(final Period period, final BigDecimal consumption) {
         this.period = period;
-        this.powerConsumption = consumption;
+        this.cost = consumption;
     }
 
     @Override
@@ -21,10 +21,10 @@ public class PeriodPowerConsumption {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof PeriodPowerConsumption)) {
+        if (!(obj instanceof PeriodPowerCost)) {
             return false;
         }
-        final PeriodPowerConsumption other = (PeriodPowerConsumption) obj;
+        final PeriodPowerCost other = (PeriodPowerCost) obj;
         if (this.period == null) {
             if (other.period != null) {
                 return false;
@@ -35,8 +35,8 @@ public class PeriodPowerConsumption {
         return true;
     }
 
-    public BigDecimal getPowerConsumption() {
-        return this.powerConsumption;
+    public BigDecimal getCost() {
+        return this.cost;
     }
 
     public Period getPeriod() {
@@ -58,7 +58,7 @@ public class PeriodPowerConsumption {
         if (this.period != null) {
             builder.append("period=").append(this.period).append(", ");
         }
-        builder.append("powerConsumption=").append(this.powerConsumption);
+        builder.append("powerConsumption=").append(this.cost);
         builder.append("]");
         return builder.toString();
     }

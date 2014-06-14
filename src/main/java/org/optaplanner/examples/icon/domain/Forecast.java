@@ -40,12 +40,12 @@ public class Forecast {
         return new ForecastBuilder(numPeriods);
     }
 
-    private final Object2ObjectMap<Period, PeriodPowerConsumption> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerConsumption>();
+    private final Object2ObjectMap<Period, PeriodPowerCost> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerCost>();
 
     private Forecast(final Object2ObjectMap<Period, BigDecimal> forecasts) {
         for (final Entry<Period, BigDecimal> entry : forecasts.object2ObjectEntrySet()) {
             final Period slot = entry.getKey();
-            this.forecasts.put(slot, new PeriodPowerConsumption(slot, entry.getValue()));
+            this.forecasts.put(slot, new PeriodPowerCost(slot, entry.getValue()));
         }
     }
 
@@ -71,12 +71,12 @@ public class Forecast {
         return true;
     }
 
-    public Collection<PeriodPowerConsumption> getAll() {
+    public Collection<PeriodPowerCost> getAll() {
         return this.forecasts.values();
     }
 
-    public PeriodPowerConsumption getForPeriod(final Period period) {
-        final PeriodPowerConsumption forecast = this.forecasts.get(period);
+    public PeriodPowerCost getForPeriod(final Period period) {
+        final PeriodPowerCost forecast = this.forecasts.get(period);
         if (forecast == null) {
             throw new IllegalArgumentException("Unknown forecasting period: " + period);
         }

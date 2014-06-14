@@ -10,19 +10,19 @@ public class Machine {
 
     private final Object2IntMap<Resource> capacities = new Object2IntOpenHashMap<Resource>();
 
-    private final double costOnShutdown;
+    private final BigDecimal costOnShutdown;
 
-    private final double costOnStartup;
+    private final BigDecimal costOnStartup;
 
-    private final double costWhenIdle;
+    private final BigDecimal costWhenIdle;
 
     private final int id;
 
     public Machine(final int id, final BigDecimal costIdle, final BigDecimal costUp, final BigDecimal costDown, final List<Integer> resourceCapacity) {
         this.id = id;
-        this.costWhenIdle = costIdle.doubleValue();
-        this.costOnStartup = costUp.doubleValue();
-        this.costOnShutdown = costDown.doubleValue();
+        this.costWhenIdle = costIdle;
+        this.costOnStartup = costUp;
+        this.costOnShutdown = costDown;
         for (int i = 0; i < resourceCapacity.size(); i++) {
             this.capacities.put(Resource.get(i), resourceCapacity.get(i));
         }
@@ -46,15 +46,15 @@ public class Machine {
         return true;
     }
 
-    public double getCostOnShutdown() {
+    public BigDecimal getCostOnShutdown() {
         return this.costOnShutdown;
     }
 
-    public double getCostOnStartup() {
+    public BigDecimal getCostOnStartup() {
         return this.costOnStartup;
     }
 
-    public double getCostWhenIdle() {
+    public BigDecimal getCostWhenIdle() {
         return this.costWhenIdle;
     }
 

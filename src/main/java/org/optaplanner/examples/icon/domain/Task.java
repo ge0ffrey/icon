@@ -117,7 +117,7 @@ public class Task {
     private Period earliestStart;
     private Machine executor;
     private int id;
-    private double powerConsumption;
+    private BigDecimal powerConsumption;
 
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
     // variables
@@ -132,7 +132,7 @@ public class Task {
         this.duration = duration;
         this.earliestStart = Period.get(earliestStart);
         this.dueBy = Period.get(dueBy);
-        this.powerConsumption = powerUse.doubleValue();
+        this.powerConsumption = powerUse;
         for (int i = 0; i < resourceConsumption.size(); i++) {
             this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
         }
@@ -177,24 +177,24 @@ public class Task {
         return this.id;
     }
 
-    public double getPowerConsumption() {
-        return this.powerConsumption;
-    }
-    
     // FIXME changes with start period; should be shadow?
     public Collection<Period> getOccupiedPeriods() {
-        Period startPeriod = this.getStartPeriod();
+        final Period startPeriod = this.getStartPeriod();
         if (startPeriod == null) {
             return Collections.emptySet();
         }
-        int start = startPeriod.getId();
-        Collection<Period> result = new HashSet<Period>();
-        for (int i = start; i < start + duration; i++) {
+        final int start = startPeriod.getId();
+        final Collection<Period> result = new HashSet<Period>();
+        for (int i = start; i < start + this.duration; i++) {
             result.add(Period.get(i));
         }
         return Collections.unmodifiableCollection(result);
     }
-    
+
+    public BigDecimal getPowerConsumption() {
+        return this.powerConsumption;
+    }
+
     public int getResourceConsumption(final Resource resource) {
         return this.resourceConsumption.getInt(resource);
     }

@@ -4,37 +4,44 @@ import java.math.BigDecimal;
 
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScoreHolder;
 import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
-import org.optaplanner.examples.icon.domain.PeriodPowerConsumption;
+import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
 global HardSoftBigDecimalScoreHolder scoreHolder;
-
-// process forecasts
-
-
-
-// actually add constraints
 
 rule "Valuate power consumption of tasks"
 when
     $t: Task(startPeriod != null, $periods: occupiedPeriods)
     $p: Period(this memberOf $periods)
-    $c: PeriodPowerConsumption(period == $p)
+    $c: PeriodPowerCost(period == $p)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $c.getPowerConsumption().negate());
+    BigDecimal consumption = $t.getPowerConsumption();
+    BigDecimal cost =  $c.getCost();
+    scoreHolder.addSoftConstraintMatch(kcontext, consumption.multiply(cost).negate());
+end
+
+rule "Score startup and shutdowns of machines that are occupied at least once"
+when
+    $m: Machine()
+    exists Task(executor == $m)
+then
+    // FIXME needs to be replaced by actual tracking and planning of idle times and shutdowns
+    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnShutdown().negate());
 end
 
 rule "Unassigned tasks"
 when
     $t: Task(startPeriod == null)
 then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1));
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.ONE.negate());
 end
 
 rule "Unscheduled tasks"
 when
     $t: Task(executor == null)
 then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1));
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.ONE.negate());
 end
 
