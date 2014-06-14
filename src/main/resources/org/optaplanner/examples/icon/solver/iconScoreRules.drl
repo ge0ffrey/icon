@@ -10,24 +10,11 @@ import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
+import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunction sumbd;
+
 global HardSoftBigDecimalScoreHolder scoreHolder;
 
 // hard constraints
-
-rule "Unassigned tasks"
-when
-    $t: Task(startPeriod == null)
-then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1000000));
-end
-
-rule "Unscheduled tasks"
-when
-    $t: Task(executor == null)
-then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1000000));
-end
-
 rule "Resource utilization; incredible performance bottleneck"
 when
     $p: Period()
@@ -36,36 +23,37 @@ when
         Task(executor == $m, $p memberOf occupiedPeriods)
     )
     $r: Resource()
-    $consumption: Number() from accumulate (
+    $consumption: Number(intValue > 0) from accumulate (
         $t: Task(this memberOf $tasks);
             sum( $t.getResourceConsumption($r))
     )
 then
     int capacity = $m.getResourceCapacity($r);
-    int numOverreach = Math.min(0, capacity - $consumption.intValue());
-    BigDecimal overreach = BigDecimal.valueOf(numOverreach);
+    int cons = $consumption.intValue();
+    int result = Math.min(0, capacity - cons);
+    BigDecimal overreach = BigDecimal.valueOf(result);
     scoreHolder.addHardConstraintMatch(kcontext, overreach);
 end
 
 // objective function
 
-rule "Valuate power consumption of tasks"
+rule "Calculate costs for task power consumption, period by period"
 when
-    $t: Task(startPeriod != null, $periods: occupiedPeriods)
-    $p: Period(this memberOf $periods)
-    $c: PeriodPowerCost(period == $p)
+    $p: Period()
+    $consumption: BigDecimal(this.compareTo(BigDecimal.ZERO) > 0) from accumulate (
+        $t: Task($p memberOf occupiedPeriods);
+            sumbd( $t.getPowerConsumption() )
+    )
+    $cost: PeriodPowerCost(period == $p)
 then
-    BigDecimal consumption = $t.getPowerConsumption();
-    BigDecimal cost =  $c.getCost();
-    scoreHolder.addSoftConstraintMatch(kcontext, consumption.multiply(cost).negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $consumption.multiply($cost.getCost()).negate());
 end
 
-rule "Score startup and shutdowns of machines that are occupied at least once"
+rule "For every machine that has a task, we must count one startup and shutdown"
 when
     $m: Machine()
     exists Task(executor == $m)
 then
-    // FIXME needs to be replaced by actual tracking and planning of idle times and shutdowns
     scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
     scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnShutdown().negate());
 end
