@@ -27,6 +27,11 @@
           <variableName>executor</variableName>
         </valueSelector>
       </changeMoveSelector>
+      <changeMoveSelector>
+        <valueSelector>
+          <variableName>shutdownPossible</variableName>
+        </valueSelector>
+      </changeMoveSelector>
       <swapMoveSelector/>
     </unionMoveSelector>
     <acceptor>

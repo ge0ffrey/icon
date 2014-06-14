@@ -163,6 +163,17 @@ public class Task {
     public int getDuration() {
         return this.duration;
     }
+    
+    private boolean mayShutdownOnCompletion;
+    
+    @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
+    public boolean getShutdownPossible() {
+        return this.mayShutdownOnCompletion;
+    }
+
+    public void setShutdownPossible(final boolean shutdownPossible) {
+        this.mayShutdownOnCompletion = shutdownPossible;
+    }
 
     public Period getEarliestStart() {
         return this.earliestStart;
