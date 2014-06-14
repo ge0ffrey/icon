@@ -28,6 +28,7 @@ public class PeriodValueRangeTest {
         final PeriodValueRange r = new PeriodValueRange(0, 1);
         Assertions.assertThat(r.contains(Period.get(0))).isTrue();
         Assertions.assertThat(r.get(0)).isEqualTo(Period.get(0));
+        Assertions.assertThat(r.getSize()).isEqualTo(1);
         final Iterator<Period> p = r.createOriginalIterator();
         Assertions.assertThat(p.hasNext()).isTrue();
         Assertions.assertThat(p.next()).isEqualTo(Period.get(0));

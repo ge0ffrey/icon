@@ -13,16 +13,16 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
 
     private class OriginalPeriodValueRangeIterator extends ValueRangeIterator<Period> {
 
-        private int upcoming = PeriodValueRange.this.fromInclusive;
+        private int upcoming = PeriodValueRange.this.from;
 
         @Override
         public boolean hasNext() {
-            return this.upcoming < PeriodValueRange.this.toExclusive;
+            return this.upcoming < PeriodValueRange.this.to;
         }
 
         @Override
         public Period next() {
-            if (this.upcoming >= PeriodValueRange.this.toExclusive) {
+            if (this.upcoming >= PeriodValueRange.this.to) {
                 throw new NoSuchElementException();
             }
             final int next = this.upcoming;
@@ -49,8 +49,8 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
         @Override
         public Period next() {
             final long index = RandomUtils.nextLong(this.workingRandom, this.size);
-            final int value = (int) (index * PeriodValueRange.this.incrementUnit + PeriodValueRange.this.fromInclusive);
-            return Period.get(value);
+            final int result = (int) (index * PeriodValueRange.this.incrementUnit + PeriodValueRange.this.from);
+            return Period.get(result);
         }
 
     }
@@ -60,7 +60,7 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
      */
     private static final long serialVersionUID = 633727612190475329L;
 
-    private final int fromInclusive, toExclusive;
+    private final int from, to;
 
     private final int incrementUnit = 1;
 
@@ -70,14 +70,20 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
         } else if (fromInclusive < 0) {
             throw new IllegalArgumentException("Left must be 0 or more.");
         }
-        this.fromInclusive = fromInclusive;
-        this.toExclusive = toExclusive;
+        this.from = fromInclusive;
+        this.to = toExclusive;
     }
 
     @Override
-    public boolean contains(final Period value) {
-        final int id = value.getId();
-        return (id >= this.fromInclusive && id <= this.toExclusive);
+    public boolean contains(final Period period) {
+        if (period == null) {
+            return false;
+        }
+        final int value = period.getId();
+        if (value < this.from || value >= this.to) {
+            return false;
+        }
+        return ((long) value - (long) this.from) % this.incrementUnit == 0;
     }
 
     @Override
@@ -92,19 +98,22 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
 
     @Override
     public Period get(final long index) {
-        // FIXME types
-        return Period.get((int) (this.fromInclusive + index));
+        if (index < 0L || index >= this.getSize()) {
+            throw new IndexOutOfBoundsException("The index (" + index + ") must be >= 0 and < size ("
+                    + this.getSize() + ").");
+        }
+        return Period.get((int) (index * this.incrementUnit + this.from));
     }
 
     @Override
     public long getSize() {
-        return this.toExclusive - this.fromInclusive + 1;
+        return ((long) this.to - (long) this.from) / this.incrementUnit;
     }
 
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("PeriodValueRange [from=").append(this.fromInclusive).append(", to=").append(this.toExclusive).append(", incrementUnit=").append(this.incrementUnit).append("]");
+        builder.append("PeriodValueRange [from=").append(this.from).append(", to=").append(this.to).append(", incrementUnit=").append(this.incrementUnit).append("]");
         return builder.toString();
     }
 }

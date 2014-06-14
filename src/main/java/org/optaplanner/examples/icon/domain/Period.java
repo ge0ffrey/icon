@@ -11,7 +11,7 @@ public class Period implements Comparable<Period> {
 
     public synchronized static Period get(final int id) {
         if (id < 0) {
-            throw new IllegalStateException("The first period is #0.");
+            throw new IllegalStateException("Periods start at 0, you asked for: " + id);
         }
         if (!Period.PERIODS.containsKey(id)) {
             Period.PERIODS.put(id, new Period(id));
