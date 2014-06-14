@@ -2,6 +2,7 @@ package org.optaplanner.examples.icon;
 
 import java.util.Set;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScoreHolder;
 import org.optaplanner.examples.icon.domain.Resource;
@@ -13,6 +14,7 @@ import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunction sumbd;
 
 global HardSoftBigDecimalScoreHolder scoreHolder;
+global BigDecimal costMultiplier;
 
 // inner types
 declare GoneIdle
@@ -31,7 +33,21 @@ declare Startup
     fromIdle : boolean
 end 
 
-// hard constraints
+rule "Determine cost multiplier"
+salience 1000 // run first
+when
+    $total: Set() from collect(
+        PeriodPowerCost()
+    )
+then
+    BigDecimal minutesInDay = BigDecimal.valueOf(1440);
+    BigDecimal numOfPeriods = BigDecimal.valueOf($total.size());
+    BigDecimal resolution = minutesInDay.divide(numOfPeriods); // minutes per period
+    BigDecimal sixty = BigDecimal.valueOf(60); // hours per period
+    drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 17, RoundingMode.HALF_UP));
+end
+
+// ################# hard constraints ###########################
 rule "Resource utilization"
 when
     $p: Period()
@@ -54,8 +70,7 @@ then
     scoreHolder.addHardConstraintMatch(kcontext, overreach);
 end
 
-// objective function
-
+// ################# objective function ###########################
 rule "Calculate costs for task power consumption, period by period"
 when
     $p: Period()
@@ -69,7 +84,9 @@ when
     )
     $cost: PeriodPowerCost(period == $p)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $consumption.multiply($cost.getCost()).negate());
+    BigDecimal costPerPeriod = $consumption.multiply($cost.getCost());
+    BigDecimal adjustedCost = costPerPeriod.multiply(costMultiplier);
+    scoreHolder.addSoftConstraintMatch(kcontext, adjustedCost.negate());
 end
 
 // detect idle, startup and shutdown
@@ -107,13 +124,15 @@ when
     not Startup(on > $s, on < $s2) // make sure there is no other startup between $s and $s2
     $totalCost: BigDecimal() from accumulate (
         PeriodPowerCost(period > $s, period < $s2, $c: cost);
-        sumbd( $c.multiply($m.getCostWhenIdle()) ) 
+        sumbd( $c ) 
     )
 then
     modify ($nextStartup) {
         setFromIdle(true);
     }
-    scoreHolder.addSoftConstraintMatch(kcontext, $totalCost.negate());
+    BigDecimal costPerMachine = $totalCost.multiply($m.getCostWhenIdle());
+    BigDecimal adjustedCost = costPerMachine.multiply(costMultiplier);
+    scoreHolder.addSoftConstraintMatch(kcontext, adjustedCost.negate());
 end
 
 rule "Penalize startups from shutdowns"
