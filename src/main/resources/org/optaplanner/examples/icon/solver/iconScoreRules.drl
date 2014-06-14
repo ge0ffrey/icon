@@ -1,9 +1,13 @@
 package org.optaplanner.examples.icon;
 
-import org.optaplanner.core.api.score.buildin.bendable.BendableScoreHolder;
-import org.optaplanner.examples.icon.domain.Task;
+import java.math.BigDecimal;
 
-global BendableScoreHolder scoreHolder;
+import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScoreHolder;
+import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.Period;
+import org.optaplanner.examples.icon.domain.PeriodPowerConsumption;
+
+global HardSoftBigDecimalScoreHolder scoreHolder;
 
 // process forecasts
 
@@ -11,17 +15,26 @@ global BendableScoreHolder scoreHolder;
 
 // actually add constraints
 
+rule "Valuate power consumption of tasks"
+when
+    $t: Task(startPeriod != null, $periods: occupiedPeriods)
+    $p: Period(this memberOf $periods)
+    $c: PeriodPowerConsumption(period == $p)
+then
+    scoreHolder.addSoftConstraintMatch(kcontext, $c.getPowerConsumption().negate());
+end
+
 rule "Unassigned tasks"
 when
     $t: Task(startPeriod == null)
 then
-    scoreHolder.addHardConstraintMatch(kcontext, 0, -1);
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1));
 end
 
 rule "Unscheduled tasks"
 when
     $t: Task(executor == null)
 then
-    scoreHolder.addHardConstraintMatch(kcontext, 0, -1);
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(-1));
 end
 

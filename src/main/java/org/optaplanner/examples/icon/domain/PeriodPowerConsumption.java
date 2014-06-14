@@ -39,7 +39,7 @@ public class PeriodPowerConsumption {
         return this.powerConsumption;
     }
 
-    public Period getTimeSlot() {
+    public Period getPeriod() {
         return this.period;
     }
 
@@ -58,9 +58,7 @@ public class PeriodPowerConsumption {
         if (this.period != null) {
             builder.append("period=").append(this.period).append(", ");
         }
-        if (this.powerConsumption != null) {
-            builder.append("powerConsumption=").append(this.powerConsumption);
-        }
+        builder.append("powerConsumption=").append(this.powerConsumption);
         builder.append("]");
         return builder.toString();
     }

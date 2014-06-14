@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
-  <environmentMode>REPRODUCIBLE</environmentMode>
+  <environmentMode>FAST_ASSERT</environmentMode>
   <solutionClass>org.optaplanner.examples.icon.domain.Schedule</solutionClass>
   <entityClass>org.optaplanner.examples.icon.domain.Task</entityClass>
 
   <scoreDirectorFactory>
-    <scoreDefinitionType>BENDABLE</scoreDefinitionType>
-    <bendableHardLevelsSize>1</bendableHardLevelsSize>
-    <bendableSoftLevelsSize>1</bendableSoftLevelsSize>
+    <scoreDefinitionType>HARD_SOFT_BIG_DECIMAL</scoreDefinitionType>
     <scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl>
   </scoreDirectorFactory>
   <termination>
@@ -35,7 +33,7 @@
       <entityTabuRatio>0.3</entityTabuRatio>
     </acceptor>
     <forager>
-      <acceptedCountLimit>2000</acceptedCountLimit>
+      <acceptedCountLimit>4</acceptedCountLimit>
     </forager>
   </localSearch>
 </solver>

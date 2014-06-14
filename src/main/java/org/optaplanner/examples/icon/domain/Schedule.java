@@ -9,10 +9,10 @@ import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
-import org.optaplanner.core.api.score.buildin.bendable.BendableScore;
+import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 
 @PlanningSolution
-public class Schedule implements Solution<BendableScore> {
+public class Schedule implements Solution<HardSoftBigDecimalScore> {
 
     private Forecast forecast;
 
@@ -22,7 +22,7 @@ public class Schedule implements Solution<BendableScore> {
 
     private int resourceCount;
 
-    private BendableScore score;
+    private HardSoftBigDecimalScore score;
 
     private Set<Task> tasks;
 
@@ -65,7 +65,7 @@ public class Schedule implements Solution<BendableScore> {
     }
 
     @Override
-    public BendableScore getScore() {
+    public HardSoftBigDecimalScore getScore() {
         return this.score;
     }
 
@@ -75,7 +75,7 @@ public class Schedule implements Solution<BendableScore> {
     }
 
     @Override
-    public void setScore(final BendableScore score) {
+    public void setScore(final HardSoftBigDecimalScore score) {
         this.score = score;
     }
 

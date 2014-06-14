@@ -10,19 +10,19 @@ public class Machine {
 
     private final Object2IntMap<Resource> capacities = new Object2IntOpenHashMap<Resource>();
 
-    private final BigDecimal costOnShutdown;
+    private final double costOnShutdown;
 
-    private final BigDecimal costOnStartup;
+    private final double costOnStartup;
 
-    private final BigDecimal costWhenIdle;
+    private final double costWhenIdle;
 
     private final int id;
 
     public Machine(final int id, final BigDecimal costIdle, final BigDecimal costUp, final BigDecimal costDown, final List<Integer> resourceCapacity) {
         this.id = id;
-        this.costWhenIdle = costIdle;
-        this.costOnStartup = costUp;
-        this.costOnShutdown = costDown;
+        this.costWhenIdle = costIdle.doubleValue();
+        this.costOnStartup = costUp.doubleValue();
+        this.costOnShutdown = costDown.doubleValue();
         for (int i = 0; i < resourceCapacity.size(); i++) {
             this.capacities.put(Resource.get(i), resourceCapacity.get(i));
         }
@@ -46,15 +46,15 @@ public class Machine {
         return true;
     }
 
-    public BigDecimal getCostOnShutdown() {
+    public double getCostOnShutdown() {
         return this.costOnShutdown;
     }
 
-    public BigDecimal getCostOnStartup() {
+    public double getCostOnStartup() {
         return this.costOnStartup;
     }
 
-    public BigDecimal getCostWhenIdle() {
+    public double getCostWhenIdle() {
         return this.costWhenIdle;
     }
 
@@ -78,15 +78,9 @@ public class Machine {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("Machine [id=").append(this.id).append(", ");
-        if (this.costOnStartup != null) {
-            builder.append("costOnStartup=").append(this.costOnStartup).append(", ");
-        }
-        if (this.costOnShutdown != null) {
-            builder.append("costOnShutdown=").append(this.costOnShutdown).append(", ");
-        }
-        if (this.costWhenIdle != null) {
-            builder.append("costWhenIdle=").append(this.costWhenIdle).append(", ");
-        }
+        builder.append("costOnStartup=").append(this.costOnStartup).append(", ");
+        builder.append("costOnShutdown=").append(this.costOnShutdown).append(", ");
+        builder.append("costWhenIdle=").append(this.costWhenIdle).append(", ");
         if (this.capacities != null) {
             builder.append("capacities=").append(this.capacities);
         }

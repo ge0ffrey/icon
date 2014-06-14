@@ -4,6 +4,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -114,7 +117,7 @@ public class Task {
     private Period earliestStart;
     private Machine executor;
     private int id;
-    private BigDecimal powerConsumption;
+    private double powerConsumption;
 
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
     // variables
@@ -129,7 +132,7 @@ public class Task {
         this.duration = duration;
         this.earliestStart = Period.get(earliestStart);
         this.dueBy = Period.get(dueBy);
-        this.powerConsumption = powerUse;
+        this.powerConsumption = powerUse.doubleValue();
         for (int i = 0; i < resourceConsumption.size(); i++) {
             this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
         }
@@ -174,10 +177,24 @@ public class Task {
         return this.id;
     }
 
-    public BigDecimal getPowerConsumption() {
+    public double getPowerConsumption() {
         return this.powerConsumption;
     }
-
+    
+    // FIXME changes with start period; should be shadow?
+    public Collection<Period> getOccupiedPeriods() {
+        Period startPeriod = this.getStartPeriod();
+        if (startPeriod == null) {
+            return Collections.emptySet();
+        }
+        int start = startPeriod.getId();
+        Collection<Period> result = new HashSet<Period>();
+        for (int i = start; i < start + duration; i++) {
+            result.add(Period.get(i));
+        }
+        return Collections.unmodifiableCollection(result);
+    }
+    
     public int getResourceConsumption(final Resource resource) {
         return this.resourceConsumption.getInt(resource);
     }
@@ -212,9 +229,7 @@ public class Task {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("Task [id=").append(this.id).append(", dueBy=").append(this.dueBy).append(", duration=").append(this.duration).append(", earliestStart=").append(this.earliestStart).append(", ");
-        if (this.powerConsumption != null) {
-            builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
-        }
+        builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
         if (this.resourceConsumption != null) {
             builder.append("resourceConsumption=").append(this.resourceConsumption).append(", ");
         }
