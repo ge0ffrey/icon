@@ -15,17 +15,19 @@ import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunc
 global HardSoftBigDecimalScoreHolder scoreHolder;
 
 // hard constraints
-rule "Resource utilization; incredible performance bottleneck"
+rule "Resource utilization"
 when
     $p: Period()
     $m: Machine()
-    $tasks: Set( size > 0 ) from collect( 
-        Task(executor == $m, $p memberOf occupiedPeriods)
-    )
     $r: Resource()
     $consumption: Number(intValue > 0) from accumulate (
-        $t: Task(this memberOf $tasks);
-            sum( $t.getResourceConsumption($r))
+        $t: Task(
+            isInitialized(), 
+            executor == $m, 
+            $p >= startPeriod,
+            $p <= finalPeriod
+        );
+        sum( $t.getResourceConsumption($r))
     )
 then
     int capacity = $m.getResourceCapacity($r);
@@ -41,8 +43,12 @@ rule "Calculate costs for task power consumption, period by period"
 when
     $p: Period()
     $consumption: BigDecimal(this.compareTo(BigDecimal.ZERO) > 0) from accumulate (
-        $t: Task($p memberOf occupiedPeriods);
-            sumbd( $t.getPowerConsumption() )
+        $t: Task(
+            isInitialized(), 
+            $p >= startPeriod,
+            $p <= finalPeriod
+        );
+        sumbd( $t.getPowerConsumption() )
     )
     $cost: PeriodPowerCost(period == $p)
 then
@@ -52,22 +58,30 @@ end
 rule "For every machine that has a task, we must count one startup and shutdown"
 when
     $m: Machine()
-    exists Task(executor == $m)
+    exists Task(isInitialized(), executor == $m)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnShutdown().negate());
+    BigDecimal result = $m.getCostOnStartup().add($m.getCostOnShutdown()).negate();
+    scoreHolder.addSoftConstraintMatch(kcontext, result);
 end
 
 rule "When a machine has more than 1 task and an idle period inbetween tasks, we consider it idle"
 when
     $m: Machine()
-    $occupiedPeriods: Set (size > 1) from accumulate (
-        $t: Task(executor == $m);
-            collectSet( $t.getOccupiedPeriods())
-      )
-    $p: Period(this not memberOf $occupiedPeriods)
-    exists Period(this memberOf $occupiedPeriods, id < $p.id)
-    exists Period(this memberOf $occupiedPeriods, id > $p.id)
+    $p: Period()
+    exists Task(isInitialized(), executor == $m)
+    accumulate (
+        Task(isInitialized(), executor == $m, $start: startPeriod, $end: finalPeriod);
+        $min: min($start.getId()),
+        $max: max($end.getId())
+    )
+    not Task(
+        isInitialized(),
+        executor == $m,
+        $p >= Period.get($min),
+        $p >= startPeriod,
+        $p <= finalPeriod,
+        $p <= Period.get($max)
+    )
 then
     // FIXME this is stupid; need to figure out how to shutdown/startup instead
     scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostWhenIdle().negate());

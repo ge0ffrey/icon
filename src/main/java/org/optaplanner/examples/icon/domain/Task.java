@@ -4,9 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -116,10 +113,11 @@ public class Task {
     private int duration;
     private Period earliestStart;
     private Machine executor;
-    private int id;
-    private Collection<Period> occupiedPeriods = Collections.emptySet();
+    private Period finalPeriod;
 
+    private int id;
     private BigDecimal powerConsumption;
+
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
 
     // variables
@@ -169,19 +167,23 @@ public class Task {
     public Period getEarliestStart() {
         return this.earliestStart;
     }
+    
+    public boolean isInitialized() {
+        return this.executor != null && this.startPeriod != null;
+    }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleExecutorRange"})
     public Machine getExecutor() {
         return this.executor;
     }
 
-    public int getId() {
-        return this.id;
+    // FIXME changes with start period; should be shadow?
+    public Period getFinalPeriod() {
+        return this.finalPeriod;
     }
 
-    // FIXME changes with start period; should be shadow?
-    public Collection<Period> getOccupiedPeriods() {
-        return this.occupiedPeriods;
+    public int getId() {
+        return this.id;
     }
 
     public BigDecimal getPowerConsumption() {
@@ -222,15 +224,10 @@ public class Task {
         this.startPeriod = startPeriod;
         // calculate and cache periods that are occupied by this new task assignment
         if (startPeriod == null) {
-            this.occupiedPeriods = Collections.emptySet();
+            this.finalPeriod = null;
             return;
         }
-        final int start = startPeriod.getId();
-        final Collection<Period> result = new HashSet<Period>();
-        for (int i = start; i < start + this.duration; i++) {
-            result.add(Period.get(i));
-        }
-        this.occupiedPeriods = Collections.unmodifiableCollection(result);
+        this.finalPeriod = Period.get(this.getStartPeriod().getId() + this.getDuration() - 1);
     }
 
     @Override
