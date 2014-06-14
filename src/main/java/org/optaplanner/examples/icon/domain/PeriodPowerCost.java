@@ -53,12 +53,14 @@ public class PeriodPowerCost {
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("PeriodPowerConsumption [");
-        if (this.period != null) {
-            builder.append("period=").append(this.period).append(", ");
+        StringBuilder builder = new StringBuilder();
+        builder.append("PeriodPowerCost [");
+        if (period != null) {
+            builder.append("period=").append(period).append(", ");
         }
-        builder.append("powerConsumption=").append(this.cost);
+        if (cost != null) {
+            builder.append("cost=").append(cost);
+        }
         builder.append("]");
         return builder.toString();
     }
