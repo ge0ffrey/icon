@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
 import java.util.Collection;
 
-public class Period {
+public class Period implements Comparable<Period> {
 
     private static final Int2ObjectSortedMap<Period> PERIODS = new Int2ObjectRBTreeMap<Period>();
 
@@ -35,6 +35,17 @@ public class Period {
         final StringBuilder builder = new StringBuilder();
         builder.append("Period [id=").append(this.id).append("]");
         return builder.toString();
+    }
+
+    @Override
+    public int compareTo(Period o) {
+        if (o.getId() > this.getId()) {
+            return -1;
+        } else if (o.getId() == this.getId()) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 
 }

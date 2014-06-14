@@ -57,3 +57,18 @@ then
     scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
     scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnShutdown().negate());
 end
+
+rule "When a machine has more than 1 task and an idle period inbetween tasks, we consider it idle"
+when
+    $m: Machine()
+    $occupiedPeriods: Set (size > 1) from accumulate (
+        $t: Task(executor == $m);
+            collectSet( $t.getOccupiedPeriods())
+      )
+    $p: Period(this not memberOf $occupiedPeriods)
+    exists Period(this memberOf $occupiedPeriods, id < $p.id)
+    exists Period(this memberOf $occupiedPeriods, id > $p.id)
+then
+    // FIXME this is stupid; need to figure out how to shutdown/startup instead
+    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostWhenIdle().negate());
+end
