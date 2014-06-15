@@ -127,6 +127,7 @@ public class Task {
         return result;
     }
 
+    // FIXME changes with start period; should be shadow?
     public boolean isInitialized() {
         return this.executor != null && this.startPeriod != null;
     }

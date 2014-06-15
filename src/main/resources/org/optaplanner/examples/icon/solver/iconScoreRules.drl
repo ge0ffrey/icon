@@ -73,7 +73,7 @@ end
 // ################# objective function ###########################
 rule "Calculate costs for task power consumption, period by period"
 when
-    $p: Period()
+    $cost: PeriodPowerCost($p: period) // shorthand to not have to match Period() first
     $consumption: BigDecimal(this.compareTo(BigDecimal.ZERO) > 0) from accumulate (
         $t: Task(
             isInitialized(), 
@@ -82,7 +82,6 @@ when
         );
         sumbd( $t.getPowerConsumption() )
     )
-    $cost: PeriodPowerCost(period == $p)
 then
     BigDecimal costPerPeriod = $consumption.multiply($cost.getCost());
     BigDecimal adjustedCost = costPerPeriod.multiply(costMultiplier);
