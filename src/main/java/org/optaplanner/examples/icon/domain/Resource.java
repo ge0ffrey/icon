@@ -3,8 +3,6 @@ package org.optaplanner.examples.icon.domain;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
-import java.util.Collection;
-
 public class Resource {
 
     private static final Int2ObjectSortedMap<Resource> RESOURCES = new Int2ObjectRBTreeMap<Resource>();
@@ -16,10 +14,6 @@ public class Resource {
             Resource.RESOURCES.put(id, new Resource(id));
         }
         return Resource.RESOURCES.get(id);
-    }
-
-    public synchronized static Collection<Resource> getAll() {
-        return Resource.RESOURCES.values();
     }
 
     private final int id;

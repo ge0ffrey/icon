@@ -3,8 +3,6 @@ package org.optaplanner.examples.icon.domain;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
-import java.util.Collection;
-
 public class Period implements Comparable<Period> {
 
     private static final Int2ObjectSortedMap<Period> PERIODS = new Int2ObjectRBTreeMap<Period>();
@@ -17,10 +15,6 @@ public class Period implements Comparable<Period> {
             Period.PERIODS.put(id, new Period(id));
         }
         return Period.PERIODS.get(id);
-    }
-
-    public synchronized static Collection<Period> getAll() {
-        return Period.PERIODS.values();
     }
 
     private final int id;

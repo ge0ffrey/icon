@@ -60,8 +60,12 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
         final Collection<Object> facts = new LinkedList<Object>();
         facts.addAll(this.getForecast().getAll());
         facts.addAll(this.getMachines());
-        facts.addAll(Period.getAll());
-        facts.addAll(Resource.getAll());
+        for (int i = 0; i < 1440 / this.getResolution(); i++) {
+            facts.add(Period.get(i));
+        }
+        for (int i = 0; i < this.getResourceCount(); i++) {
+            facts.add(Resource.get(i));
+        }
         return facts;
     }
 
