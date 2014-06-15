@@ -25,10 +25,10 @@ public class Period implements Comparable<Period> {
 
     @Override
     public int compareTo(final Period o) {
-        if (o.getId() > this.getId()) {
-            return -1;
-        } else if (o.getId() == this.getId()) {
+        if (o == this) {
             return 0;
+        } else if (o.id > this.id) {
+            return -1;
         } else {
             return 1;
         }
