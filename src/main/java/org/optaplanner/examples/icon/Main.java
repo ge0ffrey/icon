@@ -20,9 +20,7 @@ public class Main {
         // instantiate solver
         final SolverFactory f = SolverFactory.createFromXmlResource("org/optaplanner/examples/icon/solver/iconSolverConfig.xml");
         final Solver solver = f.buildSolver();
-        System.out.println("Starting solver on problem: " + folder.getAbsolutePath());
         solver.solve(schedule);
-        System.out.println("Best score: " + solver.getBestSolution().getScore());
     }
 
 }
