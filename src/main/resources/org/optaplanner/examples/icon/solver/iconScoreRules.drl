@@ -53,19 +53,19 @@ when
     $p: Period()
     $m: Machine()
     $r: Resource()
-    $consumption: Number(intValue > 0) from accumulate (
+    $consumption: Number(intValue > $m.getResourceCapacity($r)) from accumulate (
         $t: Task(
             isInitialized(), 
             executor == $m, 
             $p >= startPeriod,
             $p <= finalPeriod
         );
-        sum( $t.getResourceConsumption($r))
+        sum( $t.getResourceConsumption($r) )
     )
 then
     int capacity = $m.getResourceCapacity($r);
     int cons = $consumption.intValue();
-    int result = Math.min(0, capacity - cons);
+    int result = capacity - cons;
     BigDecimal overreach = BigDecimal.valueOf(result);
     scoreHolder.addHardConstraintMatch(kcontext, overreach);
 end
