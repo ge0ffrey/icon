@@ -1,10 +1,9 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRange;
@@ -15,19 +14,21 @@ import org.optaplanner.examples.icon.util.PeriodValueRange;
 @PlanningEntity
 public class Task {
 
-    // constants
-    private Period latestEnd;
     private int duration;
     private Period earliestStart;
     private Machine executor;
     private Period finalPeriod;
-
     private int id;
+
+    // constants
+    private Period latestEnd;
     private boolean mayShutdownOnCompletion = false;
 
     private BigDecimal powerConsumption;
 
-    private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
+    private PeriodValueRange range;
+
+    private final Map<Resource, TaskConsumption> resourceConsumption = new HashMap<Resource, TaskConsumption>();
 
     // variables
     private Period startPeriod;
@@ -43,7 +44,8 @@ public class Task {
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
         this.powerConsumption = powerUse;
         for (int i = 0; i < resourceConsumption.size(); i++) {
-            this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
+            final Resource r = Resource.get(i);
+            this.resourceConsumption.put(r, new TaskConsumption(this, r, resourceConsumption.get(i)));
         }
     }
 
@@ -63,14 +65,6 @@ public class Task {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Inclusive, as opposed to exclusive specified by the challenge.
-     * @return
-     */
-    public Period getLatestEnd() {
-        return this.latestEnd;
     }
 
     public int getDuration() {
@@ -95,12 +89,21 @@ public class Task {
         return this.id;
     }
 
+    /**
+     * Inclusive, as opposed to exclusive specified by the challenge.
+     * 
+     * @return
+     */
+    public Period getLatestEnd() {
+        return this.latestEnd;
+    }
+
     public BigDecimal getPowerConsumption() {
         return this.powerConsumption;
     }
 
-    public int getResourceConsumption(final Resource resource) {
-        return this.resourceConsumption.getInt(resource);
+    public TaskConsumption getConsumption(final Resource resource) {
+        return this.resourceConsumption.get(resource);
     }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
@@ -112,15 +115,13 @@ public class Task {
     public Period getStartPeriod() {
         return this.startPeriod;
     }
-    
-    private PeriodValueRange range;
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
-        if (range == null) {
-            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2); 
+        if (this.range == null) {
+            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2);
         }
-        return this.range; 
+        return this.range;
     }
 
     @Override

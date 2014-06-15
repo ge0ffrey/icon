@@ -1,14 +1,13 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Machine {
 
-    private final Object2IntMap<Resource> capacities = new Object2IntOpenHashMap<Resource>();
+    private final Map<Resource, MachineCapacity> capacities = new HashMap<Resource, MachineCapacity>();
 
     private final BigDecimal costOnShutdown;
 
@@ -24,7 +23,8 @@ public class Machine {
         this.costOnStartup = costUp;
         this.costOnShutdown = costDown;
         for (int i = 0; i < resourceCapacity.size(); i++) {
-            this.capacities.put(Resource.get(i), resourceCapacity.get(i));
+            final Resource r = Resource.get(i);
+            this.capacities.put(r, new MachineCapacity(this, r, resourceCapacity.get(i)));
         }
     }
 
@@ -46,6 +46,10 @@ public class Machine {
         return true;
     }
 
+    public MachineCapacity getCapacity(final Resource resource) {
+        return this.capacities.get(resource);
+    }
+
     public BigDecimal getCostOnShutdown() {
         return this.costOnShutdown;
     }
@@ -60,10 +64,6 @@ public class Machine {
 
     public int getId() {
         return this.id;
-    }
-
-    public int getResourceCapacity(final Resource resource) {
-        return this.capacities.get(resource);
     }
 
     @Override

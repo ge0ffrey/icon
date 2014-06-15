@@ -8,6 +8,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDeci
 import org.optaplanner.examples.icon.domain.Resource;
 import org.optaplanner.examples.icon.domain.Task;
 import org.optaplanner.examples.icon.domain.Machine;
+import org.optaplanner.examples.icon.domain.MachineCapacity;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
@@ -47,27 +48,64 @@ then
     drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 3, RoundingMode.HALF_UP));
 end
 
-// ################# hard constraints ###########################
-rule "Resource utilization"
+// ################ activity information ########################
+
+declare ActiveMachine
+    during: Period
+    machine: Machine
+end
+
+rule "Is Machine active at a given time?"
 when
-    $p: Period()
     $m: Machine()
-    $r: Resource()
-    $consumption: Number(intValue > $m.getResourceCapacity($r)) from accumulate (
-        $t: Task(
-            isInitialized(), 
-            executor == $m, 
-            $p >= startPeriod,
-            $p <= finalPeriod
-        );
-        sum( $t.getResourceConsumption($r) )
+    $p: Period()
+    exists Task(executor == $m, $p >= startPeriod, $p <= finalPeriod)
+then
+    insertLogical(new ActiveMachine($p, $m));
+end
+
+declare ActiveTask
+    during: Period
+    machine: Machine
+    task: Task
+end
+
+rule "Is task active at a given time?"
+when
+    $t: Task(isInitialized(), $start: startPeriod, $end: finalPeriod)
+    $p: Period(this >= $start, this <= $end)
+then
+    insertLogical(new ActiveTask($p, $t.getExecutor(), $t));
+end
+
+// ################# hard constraints ###########################
+declare MachineResourceOverusePerPeriod
+    overuse: int
+    resource: Resource
+    machine: Machine
+    period: Period
+end
+
+rule "Resource overuse per machine per period"
+when
+    ActiveMachine($p: during, $m: machine)
+    MachineCapacity(machine == $m, $r: resource, $capacity: capacity)
+    $use: Number(intValue > $capacity) from accumulate (
+        ActiveTask(during == $p, machine == $m, $t: task);
+        sum( $t.getConsumption($r).getConsumption() )
     )
 then
-    int capacity = $m.getResourceCapacity($r);
-    int cons = $consumption.intValue();
-    int result = capacity - cons;
-    BigDecimal overreach = BigDecimal.valueOf(result);
-    scoreHolder.addHardConstraintMatch(kcontext, overreach);
+    insertLogical(new MachineResourceOverusePerPeriod($use.intValue() - $capacity, $r, $m, $p));
+end
+
+rule "Resource overuse sum"
+when
+    $total: Number() from accumulate(
+        MachineResourceOverusePerPeriod($partial: overuse);
+        sum($partial)
+    )
+then
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($total.intValue()).negate());
 end
 
 // ################# objective function ###########################

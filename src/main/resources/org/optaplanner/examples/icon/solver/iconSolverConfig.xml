@@ -30,7 +30,7 @@
         </valueSelector>
       </changeMoveSelector>
       <changeMoveSelector>
-        <fixedProbabilityWeight>0.2</fixedProbabilityWeight>
+        <fixedProbabilityWeight>0.1</fixedProbabilityWeight> <!-- the higher, the more likely the solver will hang -->
         <valueSelector>
           <variableName>shutdownPossible</variableName>
         </valueSelector>
