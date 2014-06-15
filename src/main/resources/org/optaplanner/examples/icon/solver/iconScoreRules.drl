@@ -44,7 +44,7 @@ then
     BigDecimal numOfPeriods = BigDecimal.valueOf($total.size());
     BigDecimal resolution = minutesInDay.divide(numOfPeriods); // minutes per period
     BigDecimal sixty = BigDecimal.valueOf(60); // hours per period
-    drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 17, RoundingMode.HALF_UP));
+    drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 3, RoundingMode.HALF_UP));
 end
 
 // ################# hard constraints ###########################
@@ -71,20 +71,16 @@ then
 end
 
 // ################# objective function ###########################
-rule "Calculate costs for task power consumption, period by period"
+rule "Calculate costs for task power consumption, per task"
 when
-    $cost: PeriodPowerCost($p: period) // shorthand to not have to match Period() first
-    $consumption: BigDecimal(this.compareTo(BigDecimal.ZERO) > 0) from accumulate (
-        $t: Task(
-            isInitialized(), 
-            $p >= startPeriod,
-            $p <= finalPeriod
-        );
-        sumbd( $t.getPowerConsumption() )
+    $task: Task(isInitialized(), $start: startPeriod, $end: finalPeriod)
+    $cost: BigDecimal() from accumulate(
+        PeriodPowerCost(period >= $start, period <= $end, $partial: cost);
+        sumbd( $partial )
     )
 then
-    BigDecimal costPerPeriod = $consumption.multiply($cost.getCost());
-    BigDecimal adjustedCost = costPerPeriod.multiply(costMultiplier);
+    BigDecimal costPerTask = $cost.multiply($task.getPowerConsumption());
+    BigDecimal adjustedCost = costPerTask.multiply(costMultiplier);
     scoreHolder.addSoftConstraintMatch(kcontext, adjustedCost.negate());
 end
 
