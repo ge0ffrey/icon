@@ -16,7 +16,7 @@ import org.optaplanner.examples.icon.util.PeriodValueRange;
 public class Task {
 
     // constants
-    private Period dueBy;
+    private Period latestEnd;
     private int duration;
     private Period earliestStart;
     private Machine executor;
@@ -40,7 +40,7 @@ public class Task {
         this.id = id;
         this.duration = duration;
         this.earliestStart = Period.get(earliestStart);
-        this.dueBy = Period.get(dueBy);
+        this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
         this.powerConsumption = powerUse;
         for (int i = 0; i < resourceConsumption.size(); i++) {
             this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
@@ -65,8 +65,12 @@ public class Task {
         return true;
     }
 
-    public Period getDueBy() {
-        return this.dueBy;
+    /**
+     * Inclusive, as opposed to exclusive specified by the challenge.
+     * @return
+     */
+    public Period getLatestEnd() {
+        return this.latestEnd;
     }
 
     public int getDuration() {
@@ -114,7 +118,7 @@ public class Task {
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
         if (range == null) {
-            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getDueBy().getId() - this.getDuration() + 1); 
+            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2); 
         }
         return this.range; 
     }
@@ -161,8 +165,8 @@ public class Task {
         if (this.earliestStart != null) {
             builder.append("earliestStart=").append(this.earliestStart).append(", ");
         }
-        if (this.dueBy != null) {
-            builder.append("dueBy=").append(this.dueBy).append(", ");
+        if (this.latestEnd != null) {
+            builder.append("latestEnd=").append(this.latestEnd).append(", ");
         }
         builder.append("duration=").append(this.duration).append(", ");
         if (this.powerConsumption != null) {

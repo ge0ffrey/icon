@@ -37,7 +37,7 @@ rule "Determine cost multiplier"
 salience 1000 // run first
 when
     $total: Set() from collect(
-        PeriodPowerCost()
+        Period()
     )
 then
     BigDecimal minutesInDay = BigDecimal.valueOf(1440);
