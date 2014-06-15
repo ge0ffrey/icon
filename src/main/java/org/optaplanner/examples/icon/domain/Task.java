@@ -23,7 +23,7 @@ public class Task {
     private Period finalPeriod;
 
     private int id;
-    private boolean mayShutdownOnCompletion;
+    private boolean mayShutdownOnCompletion = false;
 
     private BigDecimal powerConsumption;
 
@@ -108,13 +108,15 @@ public class Task {
     public Period getStartPeriod() {
         return this.startPeriod;
     }
+    
+    private PeriodValueRange range;
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
-        if (this.getDuration() == 0) {
-            throw new IllegalStateException("FIXME Task has zero duration. What to do about them?");
+        if (range == null) {
+            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getDueBy().getId() - this.getDuration() + 1); 
         }
-        return new PeriodValueRange(this.getEarliestStart().getId(), this.getDueBy().getId() - this.getDuration() + 1);
+        return this.range; 
     }
 
     @Override
