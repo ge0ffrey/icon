@@ -35,12 +35,6 @@ declare ActiveMachine
     machine: Machine
 end
 
-declare ActiveTask
-    during: Period
-    machine: Machine
-    task: Task
-end
-
 declare MachineResourceOverusePerPeriod
     overuse: int
     resource: Resource
@@ -74,15 +68,6 @@ then
     insertLogical(new ActiveMachine($p, $m));
 end
 
-rule "Is task active at a given time?"
-salience 900 // reused by most other rules; run near first
-when
-    $t: Task(isInitialized(), $start: startPeriod, $end: finalPeriod)
-    $p: Period(this >= $start, this <= $end)
-then
-    insertLogical(new ActiveTask($p, $t.getExecutor(), $t));
-end
-
 // ################# hard constraints ###########################
 
 rule "Resource overuse per machine per period"
@@ -91,7 +76,12 @@ when
     ActiveMachine($p: during, $m: machine)
     MachineCapacity(machine == $m, $r: resource, $capacity: capacity)
     $use: Number(intValue > $capacity) from accumulate (
-        ActiveTask(during == $p, machine == $m, $t: task);
+        $t: Task(
+            isInitialized(),
+            executor == $m,
+            $p >= startPeriod,
+            $p <= finalPeriod
+        );
         sum( $t.getConsumption($r).getConsumption() )
     )
 then
