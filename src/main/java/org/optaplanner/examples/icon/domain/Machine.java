@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Two machines are never equal. You must make sure that two machines with the same ID never exist at the same time in
+ * the JVM.
+ *
+ */
 public class Machine {
 
     private final Map<Resource, MachineCapacity> capacities = new HashMap<Resource, MachineCapacity>();
@@ -28,24 +33,6 @@ public class Machine {
         }
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof Machine)) {
-            return false;
-        }
-        final Machine other = (Machine) obj;
-        if (this.id != other.id) {
-            return false;
-        }
-        return true;
-    }
-
     public MachineCapacity getCapacity(final Resource resource) {
         return this.capacities.get(resource);
     }
@@ -64,14 +51,6 @@ public class Machine {
 
     public int getId() {
         return this.id;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + this.id;
-        return result;
     }
 
     @Override
