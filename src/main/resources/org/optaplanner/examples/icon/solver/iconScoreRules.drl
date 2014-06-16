@@ -74,10 +74,10 @@ when
             $p >= startPeriod,
             $p <= finalPeriod
         );
-        sum( $t.getConsumption($r).getConsumption() )
+        sum($t.getConsumption($r))
     )
 then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($use.intValue() - $capacity).negate());
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($capacity - $use.intValue()));
 end
 
 // ################# objective function ###########################

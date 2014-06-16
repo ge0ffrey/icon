@@ -69,9 +69,6 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
             for (final Machine m : this.getMachines()) {
                 facts.add(m.getCapacity(r));
             }
-            for (final Task t : this.getTasks()) {
-                facts.add(t.getConsumption(r));
-            }
         }
         return facts;
     }

@@ -1,9 +1,10 @@
 package org.optaplanner.examples.icon.domain;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRange;
@@ -28,7 +29,7 @@ public class Task {
 
     private PeriodValueRange range;
 
-    private final Map<Resource, TaskConsumption> resourceConsumption = new HashMap<Resource, TaskConsumption>();
+    private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
 
     // variables
     private Period startPeriod;
@@ -44,8 +45,7 @@ public class Task {
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
         this.powerConsumption = powerUse;
         for (int i = 0; i < resourceConsumption.size(); i++) {
-            final Resource r = Resource.get(i);
-            this.resourceConsumption.put(r, new TaskConsumption(this, r, resourceConsumption.get(i)));
+            this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
         }
     }
 
@@ -65,6 +65,10 @@ public class Task {
             return false;
         }
         return true;
+    }
+
+    public int getConsumption(final Resource resource) {
+        return this.resourceConsumption.getInt(resource);
     }
 
     public int getDuration() {
@@ -91,7 +95,7 @@ public class Task {
 
     /**
      * Inclusive, as opposed to exclusive specified by the challenge.
-     * 
+     *
      * @return
      */
     public Period getLatestEnd() {
@@ -100,10 +104,6 @@ public class Task {
 
     public BigDecimal getPowerConsumption() {
         return this.powerConsumption;
-    }
-
-    public TaskConsumption getConsumption(final Resource resource) {
-        return this.resourceConsumption.get(resource);
     }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
