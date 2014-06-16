@@ -119,7 +119,7 @@ public class Task {
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
         if (this.range == null) {
-            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2);
+            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 1);
         }
         return this.range;
     }
@@ -149,6 +149,9 @@ public class Task {
         if (this.startPeriod == startPeriod) {
             // no change
             return;
+        } else if (!this.getStartPeriodValueRange().contains(startPeriod)) {
+            // defensive programming
+            throw new IllegalArgumentException("Cannot set start period to: " + startPeriod);
         }
         this.startPeriod = startPeriod;
         // calculate and cache periods that are occupied by this new task assignment
