@@ -39,7 +39,10 @@
           <variableName>shutdownPossible</variableName>
         </valueSelector>
       </changeMoveSelector>
-      <swapMoveSelector/>
+      <swapMoveSelector>
+        <!-- start periods may not be swapped as some are not allowed for some tasks -->
+        <variableNameInclude>executor</variableNameInclude>
+      </swapMoveSelector>
     </unionMoveSelector>
     <acceptor>
       <lateAcceptanceSize>400</lateAcceptanceSize>
