@@ -17,7 +17,7 @@
     <constructionHeuristicType>FIRST_FIT</constructionHeuristicType> 
   </constructionHeuristic -->
   <customPhase>
-    <customPhaseCommandClass>org.optaplanner.examples.icon.solver.solution.initializer.FirstAvailableSolutionInitializer</customPhaseCommandClass>
+    <customPhaseCommandClass>org.optaplanner.examples.icon.solver.solution.initializer.RandomizedSolutionInitializer</customPhaseCommandClass>
   </customPhase>
   <localSearch>
     <unionMoveSelector>
