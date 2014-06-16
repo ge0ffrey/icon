@@ -12,9 +12,13 @@
     <minutesSpentLimit>5</minutesSpentLimit>
   </termination>
   
-  <constructionHeuristic>
-    <constructionHeuristicType>FIRST_FIT</constructionHeuristicType>
-  </constructionHeuristic>
+  <!-- CH too slow for the large datasets -->
+  <!-- constructionHeuristic>
+    <constructionHeuristicType>FIRST_FIT</constructionHeuristicType> 
+  </constructionHeuristic -->
+  <customPhase>
+    <customPhaseCommandClass>org.optaplanner.examples.icon.solver.solution.initializer.FirstAvailableSolutionInitializer</customPhaseCommandClass>
+  </customPhase>
   <localSearch>
     <unionMoveSelector>
       <changeMoveSelector>
