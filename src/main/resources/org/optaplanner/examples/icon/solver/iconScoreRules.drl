@@ -35,12 +35,7 @@ declare ActiveMachine
     machine: Machine
 end
 
-declare MachineResourceOverusePerPeriod
-    overuse: int
-    resource: Resource
-    machine: Machine
-    period: Period
-end
+// ################# shared stuff ###########################
 
 rule "Determine cost multiplier"
 salience 1000 // run absolute first
@@ -56,8 +51,6 @@ then
     drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 3, RoundingMode.HALF_UP));
 end
 
-// ################ activity information ########################
-
 rule "Is Machine active at a given time?"
 salience 900 // reused by most other rules; run near first
 when
@@ -71,7 +64,6 @@ end
 // ################# hard constraints ###########################
 
 rule "Resource overuse per machine per period"
-salience 400 // run before overuses are calculated
 when
     ActiveMachine($p: during, $m: machine)
     MachineCapacity(machine == $m, $r: resource, $capacity: capacity)
@@ -85,20 +77,11 @@ when
         sum( $t.getConsumption($r).getConsumption() )
     )
 then
-    insertLogical(new MachineResourceOverusePerPeriod($use.intValue() - $capacity, $r, $m, $p));
-end
-
-rule "Resource overuse sum"
-when
-    $total: Number() from accumulate(
-        MachineResourceOverusePerPeriod($partial: overuse);
-        sum($partial)
-    )
-then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($total.intValue()).negate());
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($use.intValue() - $capacity).negate());
 end
 
 // ################# objective function ###########################
+
 rule "Calculate costs for task power consumption, per task"
 when
     $task: Task(isInitialized(), $start: startPeriod, $end: finalPeriod)
@@ -144,10 +127,10 @@ end
 rule "Penalize idle runtime"
 when
     MachineDeactivated(!shutdown, $m: machine, $deactivation: after)
-    MachineActivated(machine == $m, on > $deactivation, $p: on)
-    not MachineActivated(machine == $m, on > $deactivation, on < $p) // find immediate next activation
+    MachineActivated(machine == $m, on > $deactivation, $activation: on)
+    not MachineActivated(machine == $m, on > $deactivation, on < $activation) // find immediate next activation
     $cost: BigDecimal() from accumulate(
-        PeriodPowerCost(period > $p, period < $p, $partial: cost);
+        PeriodPowerCost(period > $deactivation, period < $activation, $partial: cost);
         sumbd( $partial )
     )
 then
