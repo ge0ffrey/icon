@@ -141,24 +141,24 @@ end
 
 rule "Penalize shutdowns"
 when
-    MachineDeactivated($m: machine, shutdown)
+    MachineDeactivated($m: machine, shutdown, $cost: machine.costOnShutdown, $cost > 0)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnShutdown().negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
 
 rule "Penalize first startup"
 when
-    MachineActivated($m: machine, $activation: on)
+    MachineActivated($m: machine, $activation: on, $cost: machine.costOnStartup, $cost > 0)
     not MachineDeactivated(machine == $m, after < $activation)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
 
 rule "Penalize subsequent startups, excluding idle"
 when
-    MachineActivated($m: machine, $activation: on)
+    MachineActivated($m: machine, $activation: on, $cost: machine.costOnStartup, $cost > 0)
     MachineDeactivated(shutdown, machine == $m, after < $activation, $latestShutdown: after)
     not MachineDeactivated(machine == $m, after < $activation, after > $latestShutdown) // find immediate previous deactivation
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
