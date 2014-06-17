@@ -3,10 +3,10 @@ package org.optaplanner.examples.icon;
 import java.io.File;
 import java.io.IOException;
 
+import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
-import org.optaplanner.examples.icon.domain.Schedule;
-import org.optaplanner.examples.icon.parser.ProblemParser;
+import org.optaplanner.examples.icon.io.IconSolutionFileIO;
 
 public class Main {
 
@@ -15,12 +15,13 @@ public class Main {
     public static void main(final String... args) throws IOException {
         // read stuff
         final String problem = args[0];
-        final File folder = new File(Main.INPUT, problem);
-        final Schedule schedule = ProblemParser.parse(new File(folder, "forecast.txt"), new File(folder, "instance.txt"));
+        final File inputFolder = new File(Main.INPUT, problem);
+        IconSolutionFileIO iconSolutionFileIO = new IconSolutionFileIO();
+        final Solution solution = iconSolutionFileIO.read(inputFolder);
         // instantiate solver
-        final SolverFactory f = SolverFactory.createFromXmlResource("org/optaplanner/examples/icon/solver/iconSolverConfig.xml");
-        final Solver solver = f.buildSolver();
-        solver.solve(schedule);
+        final SolverFactory solverFactory = SolverFactory.createFromXmlResource("org/optaplanner/examples/icon/solver/iconSolverConfig.xml");
+        final Solver solver = solverFactory.buildSolver();
+        solver.solve(solution);
     }
 
 }
