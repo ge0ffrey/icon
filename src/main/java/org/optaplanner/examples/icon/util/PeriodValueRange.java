@@ -66,7 +66,7 @@ public final class PeriodValueRange extends AbstractCountableValueRange<Period> 
 
     public PeriodValueRange(final int fromInclusive, final int toExclusive) {
         if (fromInclusive >= toExclusive) {
-            throw new IllegalArgumentException("Left must be smaller than right.");
+            throw new IllegalArgumentException("Left (" + fromInclusive + ") must be smaller than right (" + toExclusive + ").");
         } else if (fromInclusive < 0) {
             throw new IllegalArgumentException("Left must be 0 or more.");
         }

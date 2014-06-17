@@ -40,6 +40,9 @@ public class Task {
 
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption) {
         this.id = id;
+        if (duration + earliestStart - 1 >= dueBy) {
+            throw new IllegalStateException("Task " + id + " has wrong duration " + duration + ". Starts at " + earliestStart + " and yet must end before " + dueBy + ".");
+        }
         this.duration = duration;
         this.earliestStart = Period.get(earliestStart);
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
@@ -119,7 +122,7 @@ public class Task {
     @ValueRangeProvider(id = "possibleStartPeriodRange")
     public ValueRange<Period> getStartPeriodValueRange() {
         if (this.range == null) {
-            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 1);
+            this.range = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2);
         }
         return this.range;
     }
