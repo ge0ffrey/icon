@@ -19,7 +19,7 @@ public class ProblemParserTest extends AbstractParserTest {
             final Schedule s = ProblemParser.parse(new File(this.getFileUnderTest(), "forecast.txt"), new File(this.getFileUnderTest(), "instance.txt"));
             Assertions.assertThat(s).isNotNull();
             Assertions.assertThat(s.getMachines()).isNotEmpty();
-            Assertions.assertThat(s.getTasks()).isNotEmpty();
+            Assertions.assertThat(s.getTaskAssignments()).isNotEmpty();
         } catch (final IOException e) {
             Assertions.fail("Failed parsing problem.", e);
         }

@@ -2,7 +2,7 @@
 <solver>
   <environmentMode>FAST_ASSERT</environmentMode>
   <solutionClass>org.optaplanner.examples.icon.domain.Schedule</solutionClass>
-  <entityClass>org.optaplanner.examples.icon.domain.Task</entityClass>
+  <entityClass>org.optaplanner.examples.icon.domain.TaskAssignment</entityClass>
 
   <scoreDirectorFactory>
     <scoreDefinitionType>HARD_SOFT_BIG_DECIMAL</scoreDefinitionType>

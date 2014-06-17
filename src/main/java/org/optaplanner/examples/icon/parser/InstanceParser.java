@@ -11,6 +11,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.TaskAssignment;
 
 final class InstanceParser {
 
@@ -70,7 +71,7 @@ final class InstanceParser {
 
     private final int resourceCount;
 
-    private final Set<Task> tasks = new LinkedHashSet<Task>();
+    private final Set<TaskAssignment> tasks = new LinkedHashSet<TaskAssignment>();
     private final int timeResolution;
 
     private InstanceParser(final int timeResolution, final int resourceCount) {
@@ -84,7 +85,7 @@ final class InstanceParser {
     }
 
     private InstanceParser addTask(final Task t) {
-        this.tasks.add(t);
+        this.tasks.add(new TaskAssignment(t));
         return this;
     }
 
@@ -96,7 +97,7 @@ final class InstanceParser {
         return this.resourceCount;
     }
 
-    public Set<Task> getTasks() {
+    public Set<TaskAssignment> getTaskAssignments() {
         return this.tasks;
     }
 

@@ -18,7 +18,7 @@ public class InstanceParserTest extends AbstractParserTest {
             final InstanceParser p = InstanceParser.parse(this.getFileUnderTest());
             Assertions.assertThat(p).isNotNull();
             Assertions.assertThat(p.getMachines()).isNotEmpty();
-            Assertions.assertThat(p.getTasks()).isNotEmpty();
+            Assertions.assertThat(p.getTaskAssignments()).isNotEmpty();
         } catch (final IOException e) {
             Assertions.fail("Failed parsing instance file.", e);
         }

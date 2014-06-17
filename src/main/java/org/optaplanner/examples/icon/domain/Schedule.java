@@ -32,17 +32,17 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
 
     private HardSoftBigDecimalScore score;
 
-    private Set<Task> tasks;
+    private Set<TaskAssignment> taskAssignments;
 
     protected Schedule() {
         // FIXME planner cloning prevents immutability
     }
 
-    public Schedule(final int resolution, final int resourceCount, final Set<Machine> machines, final Set<Task> tasks, final Forecast forecast) {
+    public Schedule(final int resolution, final int resourceCount, final Set<Machine> machines, final Set<TaskAssignment> tasks, final Forecast forecast) {
         this.resolution = resolution;
         this.resourceCount = resourceCount;
         this.machines = Collections.unmodifiableSet(machines);
-        this.tasks = Collections.unmodifiableSet(tasks);
+        this.taskAssignments = Collections.unmodifiableSet(tasks);
         this.forecast = forecast;
     }
 
@@ -92,8 +92,8 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     }
 
     @PlanningEntityCollectionProperty
-    public Set<Task> getTasks() {
-        return this.tasks;
+    public Set<TaskAssignment> getTaskAssignments() {
+        return this.taskAssignments;
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScoreHolder;
 import org.optaplanner.examples.icon.domain.Resource;
 import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.TaskAssignment;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.MachineCapacity;
 import org.optaplanner.examples.icon.domain.Period;
@@ -56,7 +57,7 @@ salience 900 // reused by most other rules; run near first
 when
     $m: Machine()
     $p: Period()
-    exists Task(executor == $m, $p >= startPeriod, $p <= finalPeriod)
+    exists TaskAssignment(executor == $m, $p >= startPeriod, $p <= finalPeriod)
 then
     insertLogical(new ActiveMachine($p, $m));
 end
@@ -68,11 +69,12 @@ when
     ActiveMachine($p: during, $m: machine)
     MachineCapacity(machine == $m, $r: resource, $capacity: capacity)
     $use: Number(intValue > $capacity) from accumulate (
-        $t: Task(
+        TaskAssignment(
             isInitialized(),
             executor == $m,
             $p >= startPeriod,
-            $p <= finalPeriod
+            $p <= finalPeriod,
+            $t: task
         );
         sum($t.getConsumption($r))
     )
@@ -84,7 +86,7 @@ end
 
 rule "Calculate costs for task power consumption, per task"
 when
-    $task: Task(isInitialized(), $start: startPeriod, $end: finalPeriod)
+    TaskAssignment(isInitialized(), $start: startPeriod, $end: finalPeriod, $task: task)
     $cost: BigDecimal() from accumulate(
         PeriodPowerCost(period >= $start, period <= $end, $partial: cost);
         sumbd( $partial )
@@ -117,7 +119,7 @@ rule "Detect if the inactivity is in fact a shutdown"
 salience 100 // run before all startup/shutdown/idle penalties are calculated
 when
     $e: MachineDeactivated($m: machine, $p: after, !shutdown)
-    exists Task(finalPeriod == $p, executor == $m, shutdownPossible)
+    exists TaskAssignment(finalPeriod == $p, executor == $m, shutdownPossible)
 then
     modify ($e) {
         setShutdown(true);

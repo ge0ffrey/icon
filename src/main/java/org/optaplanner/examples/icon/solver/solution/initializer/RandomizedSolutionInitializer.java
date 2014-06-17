@@ -8,12 +8,12 @@ import org.optaplanner.core.impl.phase.custom.CustomPhaseCommand;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Schedule;
-import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.TaskAssignment;
 
 public class RandomizedSolutionInitializer implements CustomPhaseCommand {
 
     private static final Random RANDOM = new Random(0);
-    
+
     @Override
     public void changeWorkingSolution(final ScoreDirector scoreDirector) {
         this.initializeSchedule(scoreDirector, (Schedule) scoreDirector.getWorkingSolution());
@@ -21,13 +21,15 @@ public class RandomizedSolutionInitializer implements CustomPhaseCommand {
 
     private void initializeSchedule(final ScoreDirector scoreDirector, final Schedule schedule) {
         final List<Machine> machines = new ArrayList<Machine>(schedule.getMachines());
-        for (final Task t : schedule.getTasks()) {
-            final Machine m = machines.get(RANDOM.nextInt(machines.size())); // cycle through machines
+        for (final TaskAssignment t : schedule.getTaskAssignments()) {
+            final Machine m = machines.get(RandomizedSolutionInitializer.RANDOM.nextInt(machines.size())); // cycle
+                                                                                                           // through
+                                                                                                           // machines
             scoreDirector.beforeVariableChanged(t, "executor");
             t.setExecutor(m);
             scoreDirector.afterVariableChanged(t, "executor");
             scoreDirector.beforeVariableChanged(t, "startPeriod");
-            t.setStartPeriod(t.getStartPeriodValueRange().createRandomIterator(RANDOM).next());
+            t.setStartPeriod(t.getStartPeriodValueRange().createRandomIterator(RandomizedSolutionInitializer.RANDOM).next());
             scoreDirector.afterVariableChanged(t, "startPeriod");
         }
     }

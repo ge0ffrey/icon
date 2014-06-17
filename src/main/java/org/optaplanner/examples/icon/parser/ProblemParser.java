@@ -15,7 +15,7 @@ public class ProblemParser {
         if (i.getTimeResolution() != 1440 / f.getAll().size()) {
             throw new IllegalStateException("Number of periods does not match.");
         }
-        return new Schedule(i.getTimeResolution(), i.getResourceCount(), i.getMachines(), i.getTasks(), f);
+        return new Schedule(i.getTimeResolution(), i.getResourceCount(), i.getMachines(), i.getTaskAssignments(), f);
     }
 
 }
