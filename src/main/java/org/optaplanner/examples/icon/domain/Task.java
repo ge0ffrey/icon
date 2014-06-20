@@ -4,11 +4,18 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.optaplanner.examples.icon.util.PeriodValueRange;
 
 public class Task {
+
+    private final Set<Machine> availableMachines;
 
     private final PeriodValueRange availableStartPeriodRange;
     private final int duration;
@@ -18,7 +25,7 @@ public class Task {
     private final BigDecimal powerConsumption;
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
 
-    public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption) {
+    public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption, final Collection<Machine> machines) {
         this.id = id;
         if (duration + earliestStart - 1 >= dueBy) {
             throw new IllegalStateException("Task " + id + " has wrong duration " + duration + ". Starts at " + earliestStart + " and yet must end before " + dueBy + ".");
@@ -27,10 +34,29 @@ public class Task {
         this.earliestStart = Period.get(earliestStart);
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
         this.powerConsumption = powerUse;
+        final Set<Machine> tmp = new LinkedHashSet<Machine>(machines);
         for (int i = 0; i < resourceConsumption.size(); i++) {
-            this.resourceConsumption.put(Resource.get(i), resourceConsumption.get(i));
+            final Resource r = Resource.get(i);
+            final int consumption = resourceConsumption.get(i);
+            this.resourceConsumption.put(r, consumption);
+            // cleanse the list of available machines from machines that cannot accommodate this task
+            final Iterator<Machine> iter = tmp.iterator();
+            while (iter.hasNext()) {
+                final Machine m = iter.next();
+                if (consumption > m.getCapacity(r).getCapacity()) {
+                    iter.remove();
+                }
+            }
         }
+        if (tmp.isEmpty()) {
+            throw new IllegalStateException("No executors available for " + this);
+        }
+        this.availableMachines = Collections.unmodifiableSet(tmp);
         this.availableStartPeriodRange = new PeriodValueRange(this.getEarliestStart().getId(), this.getLatestEnd().getId() - this.getDuration() + 2);
+    }
+
+    public Set<Machine> getAvailableMachines() {
+        return this.availableMachines;
     }
 
     public PeriodValueRange getAvailableStartPeriodRange() {

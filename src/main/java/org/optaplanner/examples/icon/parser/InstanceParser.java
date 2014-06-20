@@ -62,7 +62,7 @@ final class InstanceParser {
             for (final String cap : consumptions) {
                 capacity.add(Integer.valueOf(cap));
             }
-            p.addTask(new Task(Integer.valueOf(properties[0]), duration, earliestStart, deadline, new BigDecimal(properties[4]), capacity));
+            p.addTask(new Task(Integer.valueOf(properties[0]), duration, earliestStart, deadline, new BigDecimal(properties[4]), capacity, p.getMachines()));
         }
         return p;
     }

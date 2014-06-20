@@ -50,7 +50,6 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
         return this.forecast;
     }
 
-    @ValueRangeProvider(id = "possibleExecutorRange")
     public Set<Machine> getMachines() {
         return this.machines;
     }

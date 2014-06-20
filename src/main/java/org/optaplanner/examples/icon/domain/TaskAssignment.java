@@ -1,5 +1,7 @@
 package org.optaplanner.examples.icon.domain;
 
+import java.util.Collection;
+
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
@@ -56,6 +58,11 @@ public class TaskAssignment {
     // FIXME changes with start period; should be shadow?
     public Period getFinalPeriod() {
         return this.finalPeriod;
+    }
+
+    @ValueRangeProvider(id = "possibleExecutorRange")
+    public Collection<Machine> getPossibleExecutors() {
+        return this.task.getAvailableMachines();
     }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
