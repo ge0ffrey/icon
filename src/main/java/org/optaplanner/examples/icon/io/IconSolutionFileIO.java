@@ -11,6 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.Task;
+import org.optaplanner.examples.icon.domain.TaskAssignment;
 import org.optaplanner.examples.icon.parser.ProblemParser;
 import org.optaplanner.persistence.common.api.domain.solution.SolutionFileIO;
 
@@ -50,13 +51,13 @@ public class IconSolutionFileIO implements SolutionFileIO {
     @Override
     public void write(Solution solution, File outputSolutionFile) {
         Schedule schedule = (Schedule) solution;
-        Set<Task> tasks = schedule.getTasks();
+        Set<TaskAssignment> tasks = schedule.getTaskAssignments();
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputSolutionFile), "UTF-8"));
-            for (Task task : tasks) {
+            for (TaskAssignment task : tasks) {
                 // TODO extend the output if needed
-                writer.write(String.valueOf(task.getId()));
+                writer.write(String.valueOf(task.getTask().getId()));
                 writer.write(" ");
                 writer.write(String.valueOf(task.getExecutor().getId()));
                 writer.write(" ");
