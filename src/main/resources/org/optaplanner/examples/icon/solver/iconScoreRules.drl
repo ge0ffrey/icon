@@ -86,14 +86,12 @@ end
 
 rule "Calculate costs for task power consumption, per task"
 when
-    TaskAssignment(isInitialized(), $start: startPeriod, $end: finalPeriod, $task: task)
     $cost: BigDecimal() from accumulate(
-        PeriodPowerCost(period >= $start, period <= $end, $partial: cost);
-        sumbd( $partial )
+        $t: TaskAssignment(isInitialized());
+        sumbd($t.getPowerCost())
     )
 then
-    BigDecimal costPerTask = $cost.multiply($task.getPowerConsumption());
-    BigDecimal adjustedCost = costPerTask.multiply(costMultiplier);
+    BigDecimal adjustedCost = $cost.multiply(costMultiplier);
     scoreHolder.addSoftConstraintMatch(kcontext, adjustedCost.negate());
 end
 

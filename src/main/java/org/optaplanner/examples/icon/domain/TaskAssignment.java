@@ -1,5 +1,6 @@
 package org.optaplanner.examples.icon.domain;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
@@ -14,18 +15,22 @@ public class TaskAssignment {
 
     private Period finalPeriod;
 
+    private Forecast forecast;
+
     private boolean mayShutdownOnCompletion = false;
 
-    private Period startPeriod;
+    private BigDecimal powerCost;
 
+    private Period startPeriod;
     private Task task;
 
     protected TaskAssignment() {
         // FIXME planner cloning prevents immutability
     }
 
-    public TaskAssignment(final Task task) {
+    public TaskAssignment(final Task task, final Forecast forecast) {
         this.task = task;
+        this.forecast = forecast;
     }
 
     @Override
@@ -63,6 +68,11 @@ public class TaskAssignment {
     @ValueRangeProvider(id = "possibleExecutorRange")
     public Collection<Machine> getPossibleExecutors() {
         return this.task.getAvailableMachines();
+    }
+
+    // FIXME changes with start period; should be shadow?
+    public BigDecimal getPowerCost() {
+        return this.powerCost;
     }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
@@ -119,7 +129,16 @@ public class TaskAssignment {
             this.finalPeriod = null;
             return;
         }
-        this.finalPeriod = Period.get(this.getStartPeriod().getId() + this.task.getDuration() - 1);
+        final int startPeriodId = this.getStartPeriod().getId();
+        final int finalPeriodId = startPeriodId + this.task.getDuration() - 1;
+        this.finalPeriod = Period.get(finalPeriodId);
+        // calculate power cost
+        BigDecimal cost = BigDecimal.ZERO;
+        for (int i = startPeriodId; i <= finalPeriodId; i++) {
+            final BigDecimal costPerPeriod = this.forecast.getForPeriod(Period.get(i)).getCost();
+            cost = cost.add(costPerPeriod);
+        }
+        this.powerCost = cost.multiply(this.task.getPowerConsumption());
     }
 
     @Override

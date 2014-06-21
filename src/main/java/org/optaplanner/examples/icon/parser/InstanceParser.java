@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.optaplanner.examples.icon.domain.Forecast;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Task;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
@@ -16,11 +17,11 @@ import org.optaplanner.examples.icon.domain.TaskAssignment;
 final class InstanceParser {
 
     // FIXME a lot of magic constants
-    public static InstanceParser parse(final File instance) throws IOException {
+    public static InstanceParser parse(final File instance, final Forecast forecast) throws IOException {
         final List<String> lines = FileUtils.readLines(instance);
         final int timeResolution = Integer.valueOf(lines.get(0));
         final int resourceCount = Integer.valueOf(lines.get(1));
-        final InstanceParser p = new InstanceParser(timeResolution, resourceCount);
+        final InstanceParser p = new InstanceParser(forecast, timeResolution, resourceCount);
         // parse the machine list
         final int machineCount = Integer.valueOf(lines.get(2));
         int line = 3;
@@ -67,14 +68,16 @@ final class InstanceParser {
         return p;
     }
 
+    private final Forecast forecast;
+
     private final Set<Machine> machines = new LinkedHashSet<Machine>();
 
     private final int resourceCount;
-
     private final Set<TaskAssignment> tasks = new LinkedHashSet<TaskAssignment>();
     private final int timeResolution;
 
-    private InstanceParser(final int timeResolution, final int resourceCount) {
+    private InstanceParser(final Forecast forecast, final int timeResolution, final int resourceCount) {
+        this.forecast = forecast;
         this.timeResolution = timeResolution;
         this.resourceCount = resourceCount;
     }
@@ -85,7 +88,7 @@ final class InstanceParser {
     }
 
     private InstanceParser addTask(final Task t) {
-        this.tasks.add(new TaskAssignment(t));
+        this.tasks.add(new TaskAssignment(t, this.forecast));
         return this;
     }
 
