@@ -5,12 +5,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.examples.icon.domain.Schedule;
-import org.optaplanner.examples.icon.domain.Task;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
 import org.optaplanner.examples.icon.parser.ProblemParser;
 import org.optaplanner.persistence.common.api.domain.solution.SolutionFileIO;
@@ -51,17 +57,40 @@ public class IconSolutionFileIO implements SolutionFileIO {
     @Override
     public void write(Solution solution, File outputSolutionFile) {
         Schedule schedule = (Schedule) solution;
-        Set<TaskAssignment> tasks = schedule.getTaskAssignments();
+        List<TaskAssignment> taskAssignmentList = new ArrayList<TaskAssignment>(schedule.getTaskAssignments());
+        Map<Integer, List<TaskAssignment>> machineTaskMap = buildMachineTaskAssignmentMap(taskAssignmentList);
+        Map<Integer, List<MachineOnOffEventHolder>> machineOnOffEventMap = getMachineOnOffMapping(machineTaskMap);
+        
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputSolutionFile), "UTF-8"));
-            for (TaskAssignment task : tasks) {
-                // TODO extend the output if needed
-                writer.write(String.valueOf(task.getTask().getId()));
+            writer.write(String.valueOf(machineTaskMap.keySet().size())); // number of machines
+            writer.newLine();
+            for (Entry<Integer, List<MachineOnOffEventHolder>> entry : machineOnOffEventMap.entrySet()) {
+                writer.write(String.valueOf(entry.getKey())); // machine id
+                writer.newLine();
+                if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                    writer.write(String.valueOf(entry.getValue().size())); // number of on/off events
+                    writer.newLine();
+                    for (MachineOnOffEventHolder eventHolder : entry.getValue()) {
+                        writer.write(eventHolder.isOn() ? String.valueOf(1) : String.valueOf(0)); // on/off event
+                        writer.write(" ");
+                        writer.write(String.valueOf(eventHolder.getTime())); // time of event
+                        writer.newLine();
+                    }
+                } else {
+                    writer.write(String.valueOf(0));
+                    writer.newLine();
+                }
+            }
+            writer.write(String.valueOf(taskAssignmentList.size())); // number of tasks
+            writer.newLine();
+            for (TaskAssignment taskAssignment : taskAssignmentList) {
+                writer.write(String.valueOf(taskAssignment.getTask().getId())); // task id
                 writer.write(" ");
-                writer.write(String.valueOf(task.getExecutor().getId()));
+                writer.write(String.valueOf(taskAssignment.getExecutor().getId())); // machine id
                 writer.write(" ");
-                writer.write(String.valueOf(task.getStartPeriod().getId()));
+                writer.write(String.valueOf(taskAssignment.getStartPeriod().getId())); // start period
                 writer.newLine();
             }
         } catch (IOException ex) {
@@ -70,4 +99,97 @@ public class IconSolutionFileIO implements SolutionFileIO {
             IOUtils.closeQuietly(writer);
         }
     }
+
+    private Map<Integer, List<TaskAssignment>> buildMachineTaskAssignmentMap(List<TaskAssignment> taskList) {
+        Map<Integer, List<TaskAssignment>> machineTaskAssignmentMap = new HashMap<Integer, List<TaskAssignment>>();
+        for (TaskAssignment taskAssignment : taskList) {
+            if (machineTaskAssignmentMap.containsKey(taskAssignment.getExecutor().getId())) {
+                machineTaskAssignmentMap.get(taskAssignment.getExecutor().getId()).add(taskAssignment);
+            } else {
+                List<TaskAssignment> taskAssignmentList = new ArrayList<TaskAssignment>();
+                taskAssignmentList.add(taskAssignment);
+                machineTaskAssignmentMap.put(taskAssignment.getExecutor().getId(), taskAssignmentList);
+            }
+        }
+        return machineTaskAssignmentMap;
+    }
+
+    private Map<Integer, List<MachineOnOffEventHolder>> getMachineOnOffMapping(Map<Integer, List<TaskAssignment>> machineTaskMap) {
+        Map<Integer, List<MachineOnOffEventHolder>> machineOnOffEventMap = new TreeMap<Integer, List<MachineOnOffEventHolder>>();
+        TaskAssignmentStartingPeriodComparator comparator = new TaskAssignmentStartingPeriodComparator();
+        for (Entry<Integer, List<TaskAssignment>> entry : machineTaskMap.entrySet()) {
+            if (entry.getValue() == null && entry.getValue().isEmpty()) {
+                continue;
+            }
+            machineOnOffEventMap.put(entry.getKey(), new ArrayList<MachineOnOffEventHolder>());
+            // sort task assignments by starting period
+            Collections.sort(entry.getValue(), comparator);
+
+            TaskAssignment latestEndingTimeAssignment = null;
+            TaskAssignment lastTimeAssignment = null;
+            for (TaskAssignment taskAssignment : entry.getValue()) {
+                if (latestEndingTimeAssignment != null && latestEndingTimeAssignment.getShutdownPossible() && taskAssignment.getStartPeriod().getId() > latestEndingTimeAssignment.getFinalPeriod().getId()) {
+                    machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, latestEndingTimeAssignment.getFinalPeriod().getId()));
+                    machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(true, taskAssignment.getStartPeriod().getId()));
+                }
+                // init
+                if (latestEndingTimeAssignment == null) {
+                    latestEndingTimeAssignment = taskAssignment;
+                    machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(true, taskAssignment.getStartPeriod().getId()));
+                }
+                // set new latest-ending task
+                if (taskAssignment.getFinalPeriod().getId() > latestEndingTimeAssignment.getFinalPeriod().getId()) {
+                    latestEndingTimeAssignment = taskAssignment;
+                }
+                // prefer task that may lead to machine's shutdown
+                if (taskAssignment.getFinalPeriod().getId() == latestEndingTimeAssignment.getFinalPeriod().getId() && taskAssignment.getShutdownPossible()) {
+                    latestEndingTimeAssignment = taskAssignment;
+                }
+                lastTimeAssignment = taskAssignment;
+            }
+            // make sure machines are switched off
+            if (lastTimeAssignment.getFinalPeriod().getId() < latestEndingTimeAssignment.getFinalPeriod().getId()) {
+                machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, latestEndingTimeAssignment.getFinalPeriod().getId()));
+            } else {
+                machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, lastTimeAssignment.getFinalPeriod().getId()));
+            }
+        }
+        return machineOnOffEventMap;
+    }
+
+    private static class MachineOnOffEventHolder {
+
+        private boolean on;
+        private int time;
+
+        public MachineOnOffEventHolder(boolean on, int time) {
+            this.on = on;
+            this.time = time;
+        }
+
+        public boolean isOn() {
+            return on;
+        }
+
+        public void setOn(boolean on) {
+            this.on = on;
+        }
+
+        public int getTime() {
+            return time;
+        }
+
+        public void setTime(int time) {
+            this.time = time;
+        }
+    }
+
+    private static class TaskAssignmentStartingPeriodComparator implements Comparator<TaskAssignment> {
+
+        @Override
+        public int compare(TaskAssignment o1, TaskAssignment o2) {
+            return o1.getStartPeriod().getId() - o2.getStartPeriod().getId();
+        }
+    }
+
 }
