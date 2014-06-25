@@ -12,13 +12,31 @@
     <minutesSpentLimit>5</minutesSpentLimit>
   </termination>
   
-  <!-- CH too slow for the large datasets -->
-  <!-- constructionHeuristic>
-    <constructionHeuristicType>FIRST_FIT</constructionHeuristicType> 
-  </constructionHeuristic -->
-  <customPhase>
-    <customPhaseCommandClass>org.optaplanner.examples.icon.solver.solution.initializer.RandomizedSolutionInitializer</customPhaseCommandClass>
-  </customPhase>
+  <constructionHeuristic>
+    <queuedEntityPlacer>
+      <entitySelector id="placerEntitySelector">
+        <cacheType>PHASE</cacheType>
+      </entitySelector>
+      <cartesianProductMoveSelector>
+        <changeMoveSelector>
+          <entitySelector mimicSelectorRef="placerEntitySelector"/>
+          <selectionOrder>RANDOM</selectionOrder>
+          <selectedCountLimit>3</selectedCountLimit>
+          <valueSelector>
+            <variableName>executor</variableName>
+          </valueSelector>
+        </changeMoveSelector>
+        <changeMoveSelector>
+          <entitySelector mimicSelectorRef="placerEntitySelector"/>
+          <selectionOrder>RANDOM</selectionOrder>
+          <selectedCountLimit>10</selectedCountLimit>
+          <valueSelector>
+            <variableName>startPeriod</variableName>
+          </valueSelector>
+        </changeMoveSelector>
+      </cartesianProductMoveSelector>
+    </queuedEntityPlacer>
+  </constructionHeuristic>
   <localSearch>
     <unionMoveSelector>
       <changeMoveSelector>

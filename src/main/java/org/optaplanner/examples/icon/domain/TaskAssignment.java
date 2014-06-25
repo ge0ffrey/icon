@@ -115,7 +115,10 @@ public class TaskAssignment {
     }
 
     public void setStartPeriod(final Period startPeriod) {
-        if (this.startPeriod == startPeriod) {
+        if (startPeriod == null) {
+            this.finalPeriod = null;
+            this.powerCost = BigDecimal.ZERO;
+        } else if (this.startPeriod == startPeriod) {
             // no change
             return;
         } else if (!this.getStartPeriodValueRange().contains(startPeriod)) {
