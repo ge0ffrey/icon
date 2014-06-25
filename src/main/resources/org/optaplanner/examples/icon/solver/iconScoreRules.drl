@@ -127,13 +127,13 @@ when
     MachineActivated($m: machine, $activation: on)
     MachineDeactivated(machine == $m, after < $activation, $latestShutdown: after)
     not MachineDeactivated(machine == $m, after < $activation, after > $latestShutdown) // find immediate previous deactivation
-    $idleCost: BigDecimal() from accumulate(
+    $powerCosts: BigDecimal() from accumulate(
         PeriodPowerCost(period > $latestShutdown, period < $activation, $partial: cost);
         sumbd( $partial )
     )
 then
     BigDecimal shutdownCost = $m.getCostOnShutdown().add($m.getCostOnStartup());
-    BigDecimal actualCost = $m.getCostWhenIdle().multiply($idleCost).multiply(costMultiplier);
+    BigDecimal actualCost = $m.getCostWhenIdle().multiply($powerCosts).multiply(costMultiplier);
     insertLogical(new MachineIdle($m, $latestShutdown, $activation, shutdownCost, actualCost));
 end
 
@@ -153,16 +153,12 @@ then
     scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
 
-rule "Choose idle"
+rule "Aggregate shutdown/idle costs"
 when
-    MachineIdle(shutdownCost > idleCost, $cost: idleCost)
-then
-    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
-end
-
-rule "Choose shutdown"
-when
-    MachineIdle(shutdownCost <= idleCost, $cost: shutdownCost)
+    $cost: BigDecimal() from accumulate(
+        MachineIdle($idle: idleCost, $shutdown: shutdownCost);
+        sumbd($idle.min($shutdown))
+    )
 then
     scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
