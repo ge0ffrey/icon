@@ -1,6 +1,5 @@
 package org.optaplanner.examples.icon.domain;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -9,13 +8,10 @@ import java.util.Set;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.Solution;
-import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 
 @PlanningSolution
 public class Schedule implements Solution<HardSoftBigDecimalScore> {
-
-    private static final Collection<Boolean> SHUTDOWN_POSSIBILITIES = Arrays.asList(new Boolean[] {true, false});
 
     private Forecast forecast;
 
@@ -78,11 +74,6 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     @Override
     public HardSoftBigDecimalScore getScore() {
         return this.score;
-    }
-
-    @ValueRangeProvider(id = "possibleShutdownRange")
-    public Collection<Boolean> getShutdownPossibilities() {
-        return Schedule.SHUTDOWN_POSSIBILITIES;
     }
 
     @PlanningEntityCollectionProperty

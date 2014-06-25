@@ -22,21 +22,13 @@
   <localSearch>
     <unionMoveSelector>
       <changeMoveSelector>
-        <fixedProbabilityWeight>1.0</fixedProbabilityWeight>
         <valueSelector>
           <variableName>startPeriod</variableName>
         </valueSelector>
       </changeMoveSelector>
       <changeMoveSelector>
-        <fixedProbabilityWeight>1.0</fixedProbabilityWeight>
         <valueSelector>
           <variableName>executor</variableName>
-        </valueSelector>
-      </changeMoveSelector>
-      <changeMoveSelector>
-        <fixedProbabilityWeight>0.1</fixedProbabilityWeight> <!-- the higher, the more likely the solver will hang -->
-        <valueSelector>
-          <variableName>shutdownPossible</variableName>
         </valueSelector>
       </changeMoveSelector>
       <swapMoveSelector>

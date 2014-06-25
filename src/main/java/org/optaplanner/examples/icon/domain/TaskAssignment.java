@@ -75,7 +75,6 @@ public class TaskAssignment {
         return this.powerCost;
     }
 
-    @PlanningVariable(valueRangeProviderRefs = {"possibleShutdownRange"})
     public boolean getShutdownPossible() {
         return this.mayShutdownOnCompletion;
     }
