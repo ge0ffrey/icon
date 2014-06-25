@@ -1,8 +1,8 @@
 package org.optaplanner.examples.icon.domain;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -15,12 +15,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDeci
 @PlanningSolution
 public class Schedule implements Solution<HardSoftBigDecimalScore> {
 
-    private static final Set<Boolean> SHUTDOWN_POSSIBILITIES = new HashSet<Boolean>();
-
-    static {
-        Schedule.SHUTDOWN_POSSIBILITIES.add(false);
-        Schedule.SHUTDOWN_POSSIBILITIES.add(true);
-    }
+    private static final Collection<Boolean> SHUTDOWN_POSSIBILITIES = Arrays.asList(new Boolean[] {true, false});
 
     private Forecast forecast;
 
@@ -86,7 +81,7 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     }
 
     @ValueRangeProvider(id = "possibleShutdownRange")
-    public Set<Boolean> getShutdownPossibilities() {
+    public Collection<Boolean> getShutdownPossibilities() {
         return Schedule.SHUTDOWN_POSSIBILITIES;
     }
 
