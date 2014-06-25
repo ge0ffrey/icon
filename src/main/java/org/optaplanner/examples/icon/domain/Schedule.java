@@ -2,6 +2,7 @@ package org.optaplanner.examples.icon.domain;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -32,8 +33,8 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     public Schedule(final int resolution, final int resourceCount, final Set<Machine> machines, final Set<TaskAssignment> tasks, final Forecast forecast) {
         this.resolution = resolution;
         this.resourceCount = resourceCount;
-        this.machines = Collections.unmodifiableSet(machines);
-        this.taskAssignments = Collections.unmodifiableSet(tasks);
+        this.machines = Collections.unmodifiableSet(new LinkedHashSet<Machine>(machines));
+        this.taskAssignments = Collections.unmodifiableSet(new LinkedHashSet<TaskAssignment>(tasks));
         this.forecast = forecast;
     }
 
