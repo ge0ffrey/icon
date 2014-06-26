@@ -13,8 +13,6 @@ import org.optaplanner.examples.icon.domain.MachineCapacity;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
-import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunction sumbd;
-
 global HardSoftBigDecimalScoreHolder scoreHolder;
 global BigDecimal costMultiplier;
 
@@ -96,7 +94,7 @@ rule "Calculate costs for task power consumption, per task"
 when
     $cost: BigDecimal() from accumulate(
         $t: TaskAssignment(isInitialized());
-        sumbd($t.getPowerCost())
+        sumBD($t.getPowerCost())
     )
 then
     BigDecimal adjustedCost = $cost.multiply(costMultiplier);
@@ -129,7 +127,7 @@ when
     not MachineDeactivated(machine == $m, after < $activation, after > $latestShutdown) // find immediate previous deactivation
     $powerCosts: BigDecimal() from accumulate(
         PeriodPowerCost(period > $latestShutdown, period < $activation, $partial: cost);
-        sumbd( $partial )
+        sumBD( $partial )
     )
 then
     BigDecimal shutdownCost = $m.getCostOnShutdown().add($m.getCostOnStartup());
@@ -157,7 +155,7 @@ rule "Aggregate shutdown/idle costs"
 when
     $cost: BigDecimal() from accumulate(
         MachineIdle($idle: idleCost, $shutdown: shutdownCost);
-        sumbd($idle.min($shutdown))
+        sumBD($idle.min($shutdown))
     )
 then
     scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
