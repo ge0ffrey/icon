@@ -1,8 +1,10 @@
 package org.optaplanner.examples.icon.domain;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMap;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -40,35 +42,13 @@ public class Forecast {
         return new ForecastBuilder(numPeriods);
     }
 
-    private final Object2ObjectMap<Period, PeriodPowerCost> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerCost>();
+    private final Object2ObjectSortedMap<Period, PeriodPowerCost> forecasts = new Object2ObjectAVLTreeMap<Period, PeriodPowerCost>();
 
     private Forecast(final Object2ObjectMap<Period, BigDecimal> forecasts) {
         for (final Entry<Period, BigDecimal> entry : forecasts.object2ObjectEntrySet()) {
             final Period slot = entry.getKey();
             this.forecasts.put(slot, new PeriodPowerCost(slot, entry.getValue()));
         }
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof Forecast)) {
-            return false;
-        }
-        final Forecast other = (Forecast) obj;
-        if (this.forecasts == null) {
-            if (other.forecasts != null) {
-                return false;
-            }
-        } else if (!this.forecasts.equals(other.forecasts)) {
-            return false;
-        }
-        return true;
     }
 
     public Collection<PeriodPowerCost> getAll() {
@@ -81,14 +61,6 @@ public class Forecast {
             throw new IllegalArgumentException("Unknown forecasting period: " + period);
         }
         return forecast;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((this.forecasts == null) ? 0 : this.forecasts.hashCode());
-        return result;
     }
 
     @Override

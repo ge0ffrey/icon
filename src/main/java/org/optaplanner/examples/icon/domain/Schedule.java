@@ -2,25 +2,17 @@ package org.optaplanner.examples.icon.domain;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.Solution;
-import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
 
 @PlanningSolution
 public class Schedule implements Solution<HardSoftBigDecimalScore> {
-
-    private static final Set<Boolean> SHUTDOWN_POSSIBILITIES = new HashSet<Boolean>();
-
-    static {
-        Schedule.SHUTDOWN_POSSIBILITIES.add(false);
-        Schedule.SHUTDOWN_POSSIBILITIES.add(true);
-    }
 
     private Forecast forecast;
 
@@ -41,8 +33,8 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     public Schedule(final int resolution, final int resourceCount, final Set<Machine> machines, final Set<TaskAssignment> tasks, final Forecast forecast) {
         this.resolution = resolution;
         this.resourceCount = resourceCount;
-        this.machines = Collections.unmodifiableSet(machines);
-        this.taskAssignments = Collections.unmodifiableSet(tasks);
+        this.machines = Collections.unmodifiableSet(new LinkedHashSet<Machine>(machines));
+        this.taskAssignments = Collections.unmodifiableSet(new LinkedHashSet<TaskAssignment>(tasks));
         this.forecast = forecast;
     }
 
@@ -83,11 +75,6 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     @Override
     public HardSoftBigDecimalScore getScore() {
         return this.score;
-    }
-
-    @ValueRangeProvider(id = "possibleShutdownRange")
-    public Set<Boolean> getShutdownPossibilities() {
-        return Schedule.SHUTDOWN_POSSIBILITIES;
     }
 
     @PlanningEntityCollectionProperty

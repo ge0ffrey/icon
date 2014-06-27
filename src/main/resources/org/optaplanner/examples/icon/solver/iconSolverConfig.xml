@@ -12,36 +12,54 @@
     <minutesSpentLimit>5</minutesSpentLimit>
   </termination>
   
-  <!-- CH too slow for the large datasets -->
-  <!-- constructionHeuristic>
-    <constructionHeuristicType>FIRST_FIT</constructionHeuristicType> 
-  </constructionHeuristic -->
-  <customPhase>
-    <customPhaseCommandClass>org.optaplanner.examples.icon.solver.solution.initializer.RandomizedSolutionInitializer</customPhaseCommandClass>
-  </customPhase>
+  <constructionHeuristic>
+    <queuedEntityPlacer>
+      <entitySelector id="placerEntitySelector">
+        <cacheType>PHASE</cacheType>
+      </entitySelector>
+      <cartesianProductMoveSelector>
+        <changeMoveSelector>
+          <entitySelector mimicSelectorRef="placerEntitySelector"/>
+          <selectionOrder>RANDOM</selectionOrder>
+          <selectedCountLimit>3</selectedCountLimit>
+          <valueSelector>
+            <variableName>executor</variableName>
+          </valueSelector>
+        </changeMoveSelector>
+        <changeMoveSelector>
+          <entitySelector mimicSelectorRef="placerEntitySelector"/>
+          <selectionOrder>RANDOM</selectionOrder>
+          <selectedCountLimit>10</selectedCountLimit>
+          <valueSelector>
+            <variableName>startPeriod</variableName>
+          </valueSelector>
+        </changeMoveSelector>
+      </cartesianProductMoveSelector>
+    </queuedEntityPlacer>
+  </constructionHeuristic>
   <localSearch>
     <unionMoveSelector>
       <changeMoveSelector>
-        <fixedProbabilityWeight>1.0</fixedProbabilityWeight>
         <valueSelector>
           <variableName>startPeriod</variableName>
         </valueSelector>
       </changeMoveSelector>
       <changeMoveSelector>
-        <fixedProbabilityWeight>1.0</fixedProbabilityWeight>
         <valueSelector>
           <variableName>executor</variableName>
         </valueSelector>
       </changeMoveSelector>
-      <changeMoveSelector>
-        <fixedProbabilityWeight>0.1</fixedProbabilityWeight> <!-- the higher, the more likely the solver will hang -->
-        <valueSelector>
-          <variableName>shutdownPossible</variableName>
-        </valueSelector>
-      </changeMoveSelector>
+      <!-- swap moves need to be filtered as:
+        a/ some tasks cannot be assigned to some machines, due to more resource consumption than capacity
+        b/ some periods cannot be assigned to some tasks, due to start date / deadline constraints
+      -->
       <swapMoveSelector>
-        <!-- start periods may not be swapped as some are not allowed for some tasks -->
+        <filterClass>org.optaplanner.examples.icon.solver.move.ExecutorSwapMoveFilter</filterClass>
         <variableNameInclude>executor</variableNameInclude>
+      </swapMoveSelector>
+      <swapMoveSelector>
+        <filterClass>org.optaplanner.examples.icon.solver.move.PeriodSwapMoveFilter</filterClass>
+        <variableNameInclude>startPeriod</variableNameInclude>
       </swapMoveSelector>
     </unionMoveSelector>
     <acceptor>

@@ -13,8 +13,6 @@ import org.optaplanner.examples.icon.domain.MachineCapacity;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
-import accumulate org.optaplanner.examples.icon.util.BigDecimalSumAccumulateFunction sumbd;
-
 global HardSoftBigDecimalScoreHolder scoreHolder;
 global BigDecimal costMultiplier;
 
@@ -34,6 +32,14 @@ end
 declare ActiveMachine
     during: Period
     machine: Machine
+end
+
+declare MachineIdle
+    machine: Machine
+    since: Period // exclusive
+    until: Period // exclusive
+    shutdownCost: BigDecimal
+    idleCost: BigDecimal
 end
 
 // ################# shared stuff ###########################
@@ -88,7 +94,7 @@ rule "Calculate costs for task power consumption, per task"
 when
     $cost: BigDecimal() from accumulate(
         $t: TaskAssignment(isInitialized());
-        sumbd($t.getPowerCost())
+        sumBD($t.getPowerCost())
     )
 then
     BigDecimal adjustedCost = $cost.multiply(costMultiplier);
@@ -96,7 +102,7 @@ then
 end
 
 rule "Detect machine becoming active"
-salience 200 // run before shutdown detection
+salience 200 // run before idle detection
 when
     ActiveMachine($p: during, $m: machine)
     not ActiveMachine(machine == $m, during.id == $p.id - 1) 
@@ -105,7 +111,7 @@ then
 end
 
 rule "Detect machine becoming inactive"
-salience 200 // run before shutdown detection
+salience 200 // run before idle detection
 when
     ActiveMachine($p: during, $m: machine)
     not ActiveMachine(machine == $m, during.id == $p.id + 1) 
@@ -113,37 +119,20 @@ then
     insertLogical(new MachineDeactivated($m, $p, false));
 end
 
-rule "Detect if the inactivity is in fact a shutdown"
-salience 100 // run before all startup/shutdown/idle penalties are calculated
+rule "Detect periods without tasks"
+salience 100 // run before score calculation
 when
-    $e: MachineDeactivated($m: machine, $p: after, !shutdown)
-    exists TaskAssignment(finalPeriod == $p, executor == $m, shutdownPossible)
-then
-    modify ($e) {
-        setShutdown(true);
-    }
-end
-
-rule "Penalize idle runtime"
-when
-    MachineDeactivated(!shutdown, $m: machine, $deactivation: after)
-    MachineActivated(machine == $m, on > $deactivation, $activation: on)
-    not MachineActivated(machine == $m, on > $deactivation, on < $activation) // find immediate next activation
-    $cost: BigDecimal() from accumulate(
-        PeriodPowerCost(period > $deactivation, period < $activation, $partial: cost);
-        sumbd( $partial )
+    MachineActivated($m: machine, $activation: on)
+    MachineDeactivated(machine == $m, after < $activation, $latestShutdown: after)
+    not MachineDeactivated(machine == $m, after < $activation, after > $latestShutdown) // find immediate previous deactivation
+    $powerCosts: BigDecimal() from accumulate(
+        PeriodPowerCost(period > $latestShutdown, period < $activation, $partial: cost);
+        sumBD( $partial )
     )
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, 
-        $m.getCostWhenIdle().multiply($cost).multiply(costMultiplier).negate()
-    );
-end
-
-rule "Penalize shutdowns"
-when
-    MachineDeactivated($m: machine, shutdown, $cost: machine.costOnShutdown, $cost > 0)
-then
-    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
+    BigDecimal shutdownCost = $m.getCostOnShutdown().add($m.getCostOnStartup());
+    BigDecimal actualCost = $m.getCostWhenIdle().multiply($powerCosts).multiply(costMultiplier);
+    insertLogical(new MachineIdle($m, $latestShutdown, $activation, shutdownCost, actualCost));
 end
 
 rule "Penalize first startup"
@@ -154,11 +143,37 @@ then
     scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
 
-rule "Penalize subsequent startups, excluding idle"
+rule "Penalize last shutdown"
 when
-    MachineActivated($m: machine, $activation: on, $cost: machine.costOnStartup, $cost > 0)
-    MachineDeactivated(shutdown, machine == $m, after < $activation, $latestShutdown: after)
-    not MachineDeactivated(machine == $m, after < $activation, after > $latestShutdown) // find immediate previous deactivation
+    MachineDeactivated($m: machine, $deactivation: after, $cost: machine.costOnShutdown, $cost > 0)
+    not MachineActivated(machine == $m, on >= $deactivation)
 then
     scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
+end
+
+rule "Aggregate shutdown/idle costs"
+when
+    $cost: BigDecimal() from accumulate(
+        MachineIdle($idle: idleCost, $shutdown: shutdownCost);
+        sumBD($idle.min($shutdown))
+    )
+then
+    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
+end
+
+rule "Properly mark tasks to idle"
+when
+    $t: TaskAssignment($m: executor, $shutdown: finalPeriod)
+    not MachineIdle(machine == $m, since == $shutdown, shutdownCost > idleCost)
+then
+    $t.setShutdownPossible(true);
+end
+
+
+rule "Properly mark tasks to shutdown"
+when
+    $t: TaskAssignment($m: executor, $shutdown: finalPeriod)
+    exists MachineIdle(machine == $m, since == $shutdown, shutdownCost > idleCost)
+then
+    $t.setShutdownPossible(false);
 end
