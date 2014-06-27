@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -126,9 +127,11 @@ public class IconSolutionFileIO implements SolutionFileIO {
             Collections.sort(entry.getValue(), comparator);
 
             TaskAssignment latestEndingTimeAssignment = null;
-            TaskAssignment lastTimeAssignment = null;
-            for (TaskAssignment taskAssignment : entry.getValue()) {
-                if (latestEndingTimeAssignment != null && latestEndingTimeAssignment.getShutdownPossible() && taskAssignment.getStartPeriod().getId() > latestEndingTimeAssignment.getFinalPeriod().getId()) {
+            Iterator<TaskAssignment> taskAssignmentIterator = entry.getValue().iterator();
+            while (taskAssignmentIterator.hasNext()) {
+                TaskAssignment taskAssignment = taskAssignmentIterator.next();
+                if (latestEndingTimeAssignment != null && latestEndingTimeAssignment.getShutdownPossible()
+                        && taskAssignment.getStartPeriod().getId() > latestEndingTimeAssignment.getFinalPeriod().getId() + 1) {
                     machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, latestEndingTimeAssignment.getFinalPeriod().getId()));
                     machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(true, taskAssignment.getStartPeriod().getId()));
                 }
@@ -145,13 +148,14 @@ public class IconSolutionFileIO implements SolutionFileIO {
                 if (taskAssignment.getFinalPeriod().getId() == latestEndingTimeAssignment.getFinalPeriod().getId() && taskAssignment.getShutdownPossible()) {
                     latestEndingTimeAssignment = taskAssignment;
                 }
-                lastTimeAssignment = taskAssignment;
-            }
-            // make sure machines are switched off
-            if (lastTimeAssignment.getFinalPeriod().getId() < latestEndingTimeAssignment.getFinalPeriod().getId()) {
-                machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, latestEndingTimeAssignment.getFinalPeriod().getId()));
-            } else {
-                machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, lastTimeAssignment.getFinalPeriod().getId()));
+                // make sure machines are switched off
+                if (!taskAssignmentIterator.hasNext()) {
+                    if (taskAssignment.getFinalPeriod().getId() < latestEndingTimeAssignment.getFinalPeriod().getId()) {
+                        machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, latestEndingTimeAssignment.getFinalPeriod().getId()));
+                    } else {
+                        machineOnOffEventMap.get(entry.getKey()).add(new MachineOnOffEventHolder(false, taskAssignment.getFinalPeriod().getId()));
+                    }
+                }
             }
         }
         return machineOnOffEventMap;
