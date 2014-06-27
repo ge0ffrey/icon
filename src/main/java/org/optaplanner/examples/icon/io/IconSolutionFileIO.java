@@ -104,13 +104,13 @@ public class IconSolutionFileIO implements SolutionFileIO {
     private Map<Integer, List<TaskAssignment>> buildMachineTaskAssignmentMap(List<TaskAssignment> taskList) {
         Map<Integer, List<TaskAssignment>> machineTaskAssignmentMap = new HashMap<Integer, List<TaskAssignment>>();
         for (TaskAssignment taskAssignment : taskList) {
-            if (machineTaskAssignmentMap.containsKey(taskAssignment.getExecutor().getId())) {
-                machineTaskAssignmentMap.get(taskAssignment.getExecutor().getId()).add(taskAssignment);
-            } else {
+            final int taskAssignmentId = taskAssignment.getExecutor().getId();
+            if (!machineTaskAssignmentMap.containsKey(taskAssignmentId)) {
                 List<TaskAssignment> taskAssignmentList = new ArrayList<TaskAssignment>();
                 taskAssignmentList.add(taskAssignment);
-                machineTaskAssignmentMap.put(taskAssignment.getExecutor().getId(), taskAssignmentList);
+                machineTaskAssignmentMap.put(taskAssignmentId, taskAssignmentList);
             }
+            machineTaskAssignmentMap.get(taskAssignmentId).add(taskAssignment);
         }
         return machineTaskAssignmentMap;
     }

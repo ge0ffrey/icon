@@ -22,6 +22,7 @@ public class Main {
         final SolverFactory solverFactory = SolverFactory.createFromXmlResource("org/optaplanner/examples/icon/solver/iconSolverConfig.xml");
         final Solver solver = solverFactory.buildSolver();
         solver.solve(solution);
+        iconSolutionFileIO.write(solver.getBestSolution(), new File(inputFolder, "solution.txt"));
     }
 
 }
