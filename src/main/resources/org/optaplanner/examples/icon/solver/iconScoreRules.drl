@@ -70,6 +70,13 @@ end
 
 // ################# hard constraints ###########################
 
+rule "Uninitialized task assignments"
+when
+    TaskAssignment(!isInitialized());
+then
+    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf(1000000000).negate());
+end
+
 rule "Resource overuse per machine per period"
 when
     ActiveMachine($p: during, $m: machine)
