@@ -33,28 +33,6 @@ public class TaskAssignment {
         this.forecast = forecast;
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof TaskAssignment)) {
-            return false;
-        }
-        final TaskAssignment other = (TaskAssignment) obj;
-        if (this.task == null) {
-            if (other.task != null) {
-                return false;
-            }
-        } else if (!this.task.equals(other.task)) {
-            return false;
-        }
-        return true;
-    }
-
     @PlanningVariable(valueRangeProviderRefs = {"possibleExecutorRange"})
     public Machine getExecutor() {
         return this.executor;
@@ -91,14 +69,6 @@ public class TaskAssignment {
 
     public Task getTask() {
         return this.task;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((this.task == null) ? 0 : this.task.hashCode());
-        return result;
     }
 
     // FIXME changes with start period; should be shadow?
