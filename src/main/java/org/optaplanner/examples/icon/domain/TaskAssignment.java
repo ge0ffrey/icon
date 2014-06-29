@@ -11,18 +11,15 @@ import org.optaplanner.core.api.domain.variable.PlanningVariable;
 @PlanningEntity
 public class TaskAssignment {
 
-    private Machine executor;
-
-    private Period finalPeriod;
-
+    private Task task;
     private Forecast forecast;
 
-    private boolean mayShutdownOnCompletion = false;
-
-    private BigDecimal powerCost;
-
+    private Machine executor;
     private Period startPeriod;
-    private Task task;
+
+    private Period finalPeriod;
+    private BigDecimal powerCost;
+    private boolean mayShutdownOnCompletion = false;
 
     protected TaskAssignment() {
         // FIXME planner cloning prevents immutability
@@ -33,26 +30,8 @@ public class TaskAssignment {
         this.forecast = forecast;
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof TaskAssignment)) {
-            return false;
-        }
-        final TaskAssignment other = (TaskAssignment) obj;
-        if (this.task == null) {
-            if (other.task != null) {
-                return false;
-            }
-        } else if (!this.task.equals(other.task)) {
-            return false;
-        }
-        return true;
+    public Task getTask() {
+        return this.task;
     }
 
     @PlanningVariable(valueRangeProviderRefs = {"possibleExecutorRange"})
@@ -60,9 +39,8 @@ public class TaskAssignment {
         return this.executor;
     }
 
-    // FIXME changes with start period; should be shadow?
-    public Period getFinalPeriod() {
-        return this.finalPeriod;
+    public void setExecutor(final Machine executor) {
+        this.executor = executor;
     }
 
     @ValueRangeProvider(id = "possibleExecutorRange")
@@ -70,48 +48,9 @@ public class TaskAssignment {
         return this.task.getAvailableMachines();
     }
 
-    // FIXME changes with start period; should be shadow?
-    public BigDecimal getPowerCost() {
-        return this.powerCost;
-    }
-
-    public boolean getShutdownPossible() {
-        return this.mayShutdownOnCompletion;
-    }
-
     @PlanningVariable(valueRangeProviderRefs = {"possibleStartPeriodRange"})
     public Period getStartPeriod() {
         return this.startPeriod;
-    }
-
-    @ValueRangeProvider(id = "possibleStartPeriodRange")
-    public ValueRange<Period> getStartPeriodValueRange() {
-        return this.task.getAvailableStartPeriodRange();
-    }
-
-    public Task getTask() {
-        return this.task;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((this.task == null) ? 0 : this.task.hashCode());
-        return result;
-    }
-
-    // FIXME changes with start period; should be shadow?
-    public boolean isInitialized() {
-        return this.executor != null && this.startPeriod != null;
-    }
-
-    public void setExecutor(final Machine executor) {
-        this.executor = executor;
-    }
-
-    public void setShutdownPossible(final boolean shutdownPossible) {
-        this.mayShutdownOnCompletion = shutdownPossible;
     }
 
     public void setStartPeriod(final Period startPeriod) {
@@ -141,6 +80,35 @@ public class TaskAssignment {
             cost = cost.add(costPerPeriod);
         }
         this.powerCost = cost.multiply(this.task.getPowerConsumption());
+    }
+
+    @ValueRangeProvider(id = "possibleStartPeriodRange")
+    public ValueRange<Period> getStartPeriodValueRange() {
+        return this.task.getAvailableStartPeriodRange();
+    }
+
+    // FIXME changes with start period; should be shadow?
+    public Period getFinalPeriod() {
+        return this.finalPeriod;
+    }
+
+    // FIXME changes with start period; should be shadow?
+    public BigDecimal getPowerCost() {
+        return this.powerCost;
+    }
+
+    // FIXME changes with start period; should be shadow?
+    public boolean isInitialized() {
+        return this.executor != null && this.startPeriod != null;
+    }
+
+    public boolean getShutdownPossible() {
+        return this.mayShutdownOnCompletion;
+    }
+
+
+    public void setShutdownPossible(final boolean shutdownPossible) {
+        this.mayShutdownOnCompletion = shutdownPossible;
     }
 
     @Override

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plannerBenchmark>
+  <benchmarkDirectory>local/data/icon</benchmarkDirectory>
+  <parallelBenchmarkCount>AUTO</parallelBenchmarkCount>
+  <warmUpSecondsSpentLimit>30</warmUpSecondsSpentLimit>
+
+  <inheritedSolverBenchmark>
+    <problemBenchmarks>
+      <solutionFileIOClass>org.optaplanner.examples.icon.io.IconSolutionFileIO</solutionFileIOClass>
+      <inputSolutionFile>data/icon/input/instance00</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance01</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance02</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance03</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance04</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance05</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance06</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance07</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance08</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance09</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance10</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance11</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance12</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance13</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance14</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance15</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance16</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance17</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance18</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance19</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance20</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance21</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance22</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance23</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance24</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance25</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance26</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance27</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance28</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance29</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance30</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance31</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance32</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance33</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance34</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance35</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance36</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance37</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance38</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance39</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance40</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance41</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance42</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance43</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance44</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance45</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance46</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance47</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance48</inputSolutionFile>
+      <inputSolutionFile>data/icon/input/instance49</inputSolutionFile>
+      <problemStatisticType>BEST_SCORE</problemStatisticType>
+    </problemBenchmarks>
+
+    <solver>
+      <solutionClass>org.optaplanner.examples.icon.domain.Schedule</solutionClass>
+      <entityClass>org.optaplanner.examples.icon.domain.TaskAssignment</entityClass>
+
+      <scoreDirectorFactory>
+        <scoreDefinitionType>HARD_SOFT_BIG_DECIMAL</scoreDefinitionType>
+        <scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl>
+      </scoreDirectorFactory>
+      <termination>
+        <secondsSpentLimit>300</secondsSpentLimit>
+      </termination>
+      <constructionHeuristic>
+        <queuedEntityPlacer>
+          <entitySelector id="placerEntitySelector">
+            <cacheType>PHASE</cacheType>
+          </entitySelector>
+          <cartesianProductMoveSelector>
+            <changeMoveSelector>
+              <entitySelector mimicSelectorRef="placerEntitySelector"/>
+              <selectionOrder>RANDOM</selectionOrder>
+              <selectedCountLimit>3</selectedCountLimit>
+              <valueSelector>
+                <variableName>executor</variableName>
+              </valueSelector>
+            </changeMoveSelector>
+            <changeMoveSelector>
+              <entitySelector mimicSelectorRef="placerEntitySelector"/>
+              <selectionOrder>RANDOM</selectionOrder>
+              <selectedCountLimit>10</selectedCountLimit>
+              <valueSelector>
+                <variableName>startPeriod</variableName>
+              </valueSelector>
+            </changeMoveSelector>
+          </cartesianProductMoveSelector>
+        </queuedEntityPlacer>
+      </constructionHeuristic>
+    </solver>
+  </inheritedSolverBenchmark>
+
+  <solverBenchmark>
+    <name>Construction Heuristic</name>
+  </solverBenchmark>
+
+  <solverBenchmark>
+    <name>Late Acceptance</name>
+    <solver>
+      <localSearch>
+        <unionMoveSelector>
+          <changeMoveSelector>
+            <valueSelector>
+              <variableName>startPeriod</variableName>
+            </valueSelector>
+          </changeMoveSelector>
+          <changeMoveSelector>
+            <valueSelector>
+              <variableName>executor</variableName>
+            </valueSelector>
+          </changeMoveSelector>
+          <!-- swap moves need to be filtered as:
+            a/ some tasks cannot be assigned to some machines, due to more resource consumption than capacity
+            b/ some periods cannot be assigned to some tasks, due to start date / deadline constraints
+          -->
+          <swapMoveSelector>
+            <!--<filterClass>org.optaplanner.examples.icon.solver.move.ExecutorSwapMoveFilter</filterClass>-->
+            <variableNameInclude>executor</variableNameInclude>
+          </swapMoveSelector>
+          <swapMoveSelector>
+            <!--<filterClass>org.optaplanner.examples.icon.solver.move.PeriodSwapMoveFilter</filterClass>-->
+            <variableNameInclude>startPeriod</variableNameInclude>
+          </swapMoveSelector>
+        </unionMoveSelector>
+        <acceptor>
+          <lateAcceptanceSize>400</lateAcceptanceSize>
+          <entityTabuRatio>0.3</entityTabuRatio>
+        </acceptor>
+        <forager>
+          <acceptedCountLimit>4</acceptedCountLimit>
+        </forager>
+      </localSearch>
+    </solver>
+  </solverBenchmark>
+</plannerBenchmark>
