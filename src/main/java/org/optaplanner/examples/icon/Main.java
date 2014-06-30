@@ -3,10 +3,11 @@ package org.optaplanner.examples.icon;
 import java.io.File;
 import java.io.IOException;
 
-import org.optaplanner.core.api.domain.solution.Solution;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.io.IconSolutionFileIO;
+import org.optaplanner.examples.icon.solver.score.IconScoreCalculator;
 
 public class Main {
 
@@ -16,13 +17,16 @@ public class Main {
         // read stuff
         final String problem = args[0];
         final File inputFolder = new File(Main.INPUT, problem);
-        IconSolutionFileIO iconSolutionFileIO = new IconSolutionFileIO();
-        final Solution solution = iconSolutionFileIO.read(inputFolder);
+        final IconSolutionFileIO iconSolutionFileIO = new IconSolutionFileIO();
+        final Schedule solution = (Schedule) iconSolutionFileIO.read(inputFolder);
         // instantiate solver
         final SolverFactory solverFactory = SolverFactory.createFromXmlResource("org/optaplanner/examples/icon/solver/iconSolverConfig.xml");
         final Solver solver = solverFactory.buildSolver();
         solver.solve(solution);
-        iconSolutionFileIO.write(solver.getBestSolution(), new File(inputFolder, "solution.txt"));
+        final Schedule bestSolution = (Schedule) solver.getBestSolution();
+        iconSolutionFileIO.write(bestSolution, new File(inputFolder, "solution.txt"));
+        final IconScoreCalculator calc = new IconScoreCalculator();
+        System.out.println("Asserted score: " + calc.calculateScore(bestSolution));
     }
 
 }
