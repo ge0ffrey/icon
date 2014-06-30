@@ -141,10 +141,6 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
                     this.idleCosts = this.idleCosts.add(this.getCost(p, m.getCostWhenIdle()));
                 }
             }
-            System.out.println("+ " + this.startupCounts + " " + this.startupCosts);
-            System.out.println("- " + this.shutdownCounts + " " + this.shutdownCosts);
-            System.out.println("X " + this.taskCosts);
-            System.out.println("0 " + this.idleCounts + " " + this.idleCosts);
             return this.taskCosts.add(this.idleCosts).add(this.startupCosts).add(this.shutdownCosts).negate();
         }
 
