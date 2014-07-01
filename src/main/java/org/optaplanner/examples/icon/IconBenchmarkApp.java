@@ -16,15 +16,10 @@
 
 package org.optaplanner.examples.icon;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.optaplanner.benchmark.api.PlannerBenchmark;
 import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
-import org.optaplanner.core.api.domain.solution.Solution;
-import org.optaplanner.core.api.solver.Solver;
-import org.optaplanner.core.api.solver.SolverFactory;
-import org.optaplanner.examples.icon.io.IconSolutionFileIO;
 
 public class IconBenchmarkApp {
 
