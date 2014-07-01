@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
+import org.optaplanner.core.api.domain.valuerange.CountableValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
@@ -83,7 +84,7 @@ public class TaskAssignment {
     }
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
-    public ValueRange<Period> getStartPeriodValueRange() {
+    public CountableValueRange<Period> getStartPeriodValueRange() {
         return this.task.getAvailableStartPeriodRange();
     }
 
