@@ -42,8 +42,4 @@ public class TaskCostTracker {
         this.process(ta, false);
     }
 
-    public void setCost(final long cost) {
-        this.cost = cost;
-    }
-
 }

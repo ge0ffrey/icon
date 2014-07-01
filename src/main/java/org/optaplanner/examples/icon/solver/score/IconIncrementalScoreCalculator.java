@@ -7,6 +7,7 @@ import org.optaplanner.examples.icon.domain.TaskAssignment;
 
 public class IconIncrementalScoreCalculator implements IncrementalScoreCalculator<Schedule> {
 
+    private MachineCostTracker costsOfRunningMachines;
     private TaskCostTracker costsOfRunningTasks;
     private CapacityTracker resourceConsumption;
 
@@ -47,7 +48,7 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
     @Override
     public HardSoftLongScore calculateScore() {
         final long hardScore = this.resourceConsumption.getOverusedCapacity();
-        final long softScore = this.costsOfRunningTasks.getCost();
+        final long softScore = this.costsOfRunningTasks.getCost() + this.costsOfRunningMachines.getCost();
         return HardSoftLongScore.valueOf(-hardScore, -softScore);
     }
 
@@ -57,11 +58,13 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         }
         this.resourceConsumption.add(entity);
         this.costsOfRunningTasks.add(entity);
+        this.costsOfRunningMachines.add(entity);
     }
 
     @Override
     public void resetWorkingSolution(final Schedule workingSolution) {
         this.costsOfRunningTasks = new TaskCostTracker(workingSolution);
+        this.costsOfRunningMachines = new MachineCostTracker(workingSolution);
         this.resourceConsumption = new CapacityTracker(workingSolution);
         for (final TaskAssignment ta : workingSolution.getTaskAssignments()) {
             this.insert(ta);
@@ -74,6 +77,7 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         }
         this.resourceConsumption.remove(entity);
         this.costsOfRunningTasks.remove(entity);
+        this.costsOfRunningMachines.remove(entity);
     }
 
 }
