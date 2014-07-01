@@ -8,7 +8,7 @@ import org.optaplanner.core.api.domain.valuerange.ValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
 
-@PlanningEntity
+@PlanningEntity(difficultyComparatorClass = TaskAssignmentDifficultyComparator.class)
 public class TaskAssignment {
 
     private Task task;

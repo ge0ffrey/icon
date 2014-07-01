@@ -18,6 +18,8 @@ public class Task {
     private final Set<Machine> availableMachines;
 
     private final PeriodValueRange availableStartPeriodRange;
+
+    private final long difficulty;
     private final int duration;
     private final Period earliestStart;
     private final int id;
@@ -35,9 +37,11 @@ public class Task {
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
         this.powerConsumption = powerUse;
         final Set<Machine> tmp = new LinkedHashSet<Machine>(machines);
+        long difficulty = duration;
         for (int i = 0; i < resourceConsumption.size(); i++) {
             final Resource r = Resource.get(i);
             final int consumption = resourceConsumption.get(i);
+            difficulty *= consumption + 1;
             this.resourceConsumption.put(r, consumption);
             // cleanse the list of available machines from machines that cannot accommodate this task
             final Iterator<Machine> iter = tmp.iterator();
@@ -48,6 +52,7 @@ public class Task {
                 }
             }
         }
+        this.difficulty = difficulty;
         if (tmp.isEmpty()) {
             throw new IllegalStateException("No executors available for " + this);
         }
@@ -65,6 +70,10 @@ public class Task {
 
     public int getConsumption(final Resource resource) {
         return this.resourceConsumption.getInt(resource);
+    }
+
+    public long getDifficulty() {
+        return this.difficulty;
     }
 
     public int getDuration() {
