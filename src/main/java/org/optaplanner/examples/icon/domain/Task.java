@@ -1,7 +1,7 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -26,7 +26,7 @@ public class Task {
     private final int id;
     private final Period latestEnd;
     private final long powerConsumption;
-    private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
+    private final Object2ObjectMap<Resource, ResourceRequirement> resourceConsumption = new Object2ObjectOpenHashMap<Resource, ResourceRequirement>();
 
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption, final Collection<Machine> machines) {
         this.id = id;
@@ -43,7 +43,7 @@ public class Task {
             final Resource r = Resource.get(i);
             final int consumption = resourceConsumption.get(i);
             difficulty *= consumption + 1;
-            this.resourceConsumption.put(r, consumption);
+            this.resourceConsumption.put(r, new ResourceRequirement(r, consumption));
             // cleanse the list of available machines from machines that cannot accommodate this task
             final Iterator<Machine> iter = tmp.iterator();
             while (iter.hasNext()) {
@@ -70,7 +70,11 @@ public class Task {
     }
 
     public int getConsumption(final Resource resource) {
-        return this.resourceConsumption.getInt(resource);
+        return this.resourceConsumption.get(resource).getRequirement();
+    }
+
+    public Collection<ResourceRequirement> getConsumptions() {
+        return this.resourceConsumption.values();
     }
 
     public long getDifficulty() {
