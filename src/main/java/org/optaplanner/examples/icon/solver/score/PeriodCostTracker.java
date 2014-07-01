@@ -98,29 +98,30 @@ public class PeriodCostTracker {
         // find all gaps where the machine has no tasks running
         final List<Pair<Period, Period>> gaps = new LinkedList<Pair<Period, Period>>();
         boolean isInGap = false;
-        SortedSet<Period> gap = new TreeSet<Period>();
+        Period firstInGap = null;
         for (int i = 0; i <= maxPeriodId; i++) {
-            final Period checked = Period.get(i);
-            if (running.contains(checked)) {
+            final Period current = Period.get(i);
+            if (running.contains(current)) {
                 if (isInGap) {
                     // end gap
                     isInGap = false;
-                    if (!gap.contains(Period.get(0)) && !gap.contains(Period.get(maxPeriodId))) {
+                    Period lastInGap = Period.get(current.getId() - 1);
+                    if (firstInGap == Period.get(0) || lastInGap == Period.get(maxPeriodId)) {
                         /*
                          * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last
                          * shutdown
                          */
-                        gaps.add(new Pair<Period, Period>(gap.first(), gap.last()));
+                        continue;
                     }
-                    gap = new TreeSet<Period>();
+                    gaps.add(new Pair<Period, Period>(firstInGap, lastInGap));
                 } else {
                     continue;
                 }
             } else {
                 if (!isInGap) {
                     isInGap = true;
+                    firstInGap = current;
                 }
-                gap.add(checked);
             }
         }
         // now go through the gaps and properly account for their costs
