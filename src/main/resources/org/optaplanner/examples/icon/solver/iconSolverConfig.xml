@@ -6,7 +6,7 @@
 
   <scoreDirectorFactory>
     <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
-    <scoreDefinitionType>HARD_SOFT_BIG_DECIMAL</scoreDefinitionType>
+    <scoreDefinitionType>HARD_SOFT_LONG</scoreDefinitionType>
     <scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl>
   </scoreDirectorFactory>
   <termination>

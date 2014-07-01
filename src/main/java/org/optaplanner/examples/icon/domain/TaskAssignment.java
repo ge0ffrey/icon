@@ -1,13 +1,12 @@
 package org.optaplanner.examples.icon.domain;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.CountableValueRange;
-import org.optaplanner.core.api.domain.valuerange.ValueRange;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 
 @PlanningEntity(difficultyComparatorClass = TaskAssignmentDifficultyComparator.class)
 public class TaskAssignment {
@@ -19,7 +18,7 @@ public class TaskAssignment {
     private Period startPeriod;
 
     private Period finalPeriod;
-    private BigDecimal powerCost;
+    private long powerCost;
     private boolean mayShutdownOnCompletion = false;
 
     protected TaskAssignment() {
@@ -57,7 +56,7 @@ public class TaskAssignment {
     public void setStartPeriod(final Period startPeriod) {
         if (startPeriod == null) {
             this.finalPeriod = null;
-            this.powerCost = BigDecimal.ZERO;
+            this.powerCost = 0;
         } else if (this.startPeriod == startPeriod) {
             // no change
             return;
@@ -75,12 +74,11 @@ public class TaskAssignment {
         final int finalPeriodId = startPeriodId + this.task.getDuration() - 1;
         this.finalPeriod = Period.get(finalPeriodId);
         // calculate power cost
-        BigDecimal cost = BigDecimal.ZERO;
+        long cost = 0;
         for (int i = startPeriodId; i <= finalPeriodId; i++) {
-            final BigDecimal costPerPeriod = this.forecast.getForPeriod(Period.get(i)).getCost();
-            cost = cost.add(costPerPeriod);
+            cost += this.forecast.getForPeriod(Period.get(i)).getCost();;
         }
-        this.powerCost = cost.multiply(this.task.getPowerConsumption());
+        this.powerCost = FixedPointArithmetic.multiply(cost, this.task.getPowerConsumption());
     }
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
@@ -94,7 +92,7 @@ public class TaskAssignment {
     }
 
     // FIXME changes with start period; should be shadow?
-    public BigDecimal getPowerCost() {
+    public long getPowerCost() {
         return this.powerCost;
     }
 

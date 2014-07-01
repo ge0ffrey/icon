@@ -9,10 +9,10 @@ import java.util.Set;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
 import org.optaplanner.core.api.domain.solution.Solution;
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 
 @PlanningSolution
-public class Schedule implements Solution<HardSoftBigDecimalScore> {
+public class Schedule implements Solution<HardSoftLongScore> {
 
     private Forecast forecast;
 
@@ -22,7 +22,7 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
 
     private int resourceCount;
 
-    private HardSoftBigDecimalScore score;
+    private HardSoftLongScore score;
 
     private Set<TaskAssignment> taskAssignments;
 
@@ -73,7 +73,7 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     }
 
     @Override
-    public HardSoftBigDecimalScore getScore() {
+    public HardSoftLongScore getScore() {
         return this.score;
     }
 
@@ -83,7 +83,7 @@ public class Schedule implements Solution<HardSoftBigDecimalScore> {
     }
 
     @Override
-    public void setScore(final HardSoftBigDecimalScore score) {
+    public void setScore(final HardSoftLongScore score) {
         this.score = score;
     }
 

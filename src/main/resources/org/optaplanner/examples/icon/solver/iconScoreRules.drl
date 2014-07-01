@@ -1,10 +1,9 @@
 package org.optaplanner.examples.icon;
 
 import java.util.Set;
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScoreHolder;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScoreHolder;
 import org.optaplanner.examples.icon.domain.Resource;
 import org.optaplanner.examples.icon.domain.Task;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
@@ -12,8 +11,9 @@ import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.MachineCapacity;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 
-global HardSoftBigDecimalScoreHolder scoreHolder;
+global HardSoftLongScoreHolder scoreHolder;
 
 // ################ declared types ########################
 
@@ -27,7 +27,7 @@ declare IdleSequence
     startsAfter: Period
     endsBefore: Period
     isShutdown: boolean // what the cost below actually means
-    cost: BigDecimal // either the cost of all the idle time, or cost of startup+shutdown
+    cost: long // either the cost of all the idle time, or cost of startup+shutdown
 end
 
 // ################ scoring ########################
@@ -40,8 +40,8 @@ when
     exists TaskAssignment(executor == $m, $p >= startPeriod, $p <= finalPeriod)
 then
     insertLogical(new MachineHasTask($p, $m));
-    BigDecimal idleCost = $c.multiply($m.getCostWhenIdle());
-    scoreHolder.addSoftConstraintMatch(kcontext, idleCost.negate());
+    long idleCost = FixedPointArithmetic.multiply($m.getCostWhenIdle(), $c);
+    scoreHolder.addSoftConstraintMatch(kcontext, -idleCost);
 end
 
 rule "Resource overuse per machine per period"
@@ -59,17 +59,17 @@ when
         sum($t.getConsumption($r))
     )
 then
-    scoreHolder.addHardConstraintMatch(kcontext, BigDecimal.valueOf($capacity - $use.intValue()));
+    scoreHolder.addHardConstraintMatch(kcontext, $capacity - $use.intValue());
 end
 
 rule "Calculate costs for task power consumption, per task"
 when
-    $cost: BigDecimal() from accumulate(
+    $cost: Number() from accumulate(
         $t: TaskAssignment(isInitialized());
-        sumBD($t.getPowerCost())
+        sum($t.getPowerCost())
     )
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, -$cost.longValue());
 end
 
 rule "Detect periods when machines have no tasks, decide if idle or startup+shutdown, and calculate costs properly"
@@ -82,15 +82,15 @@ when
     $restartingTask: MachineHasTask(machine == $m, $two: during, during > $one)
     not MachineHasTask(machine == $m, during > $one, during < $two)
     // and calculate the idle costs
-    $idleCost: BigDecimal() from accumulate(
+    $idleCost: Number() from accumulate(
         PeriodPowerCost(period > $one, period < $two, $cost: cost);
-        sumBD($cost)
+        sum($cost)
     ) 
 then
-    BigDecimal actualIdleCost = $idleCost.multiply($m.getCostWhenIdle());
-    BigDecimal restartCost = $m.getCostOfRespin();
-    boolean isShutdown = actualIdleCost.compareTo(restartCost) > 0;
-    BigDecimal resultingCost = isShutdown ? restartCost : actualIdleCost;
+    long actualIdleCost = FixedPointArithmetic.multiply($idleCost.longValue(), $m.getCostWhenIdle());
+    long restartCost = $m.getCostOfRespin();
+    boolean isShutdown = actualIdleCost > restartCost;
+    long resultingCost = isShutdown ? restartCost : actualIdleCost;
     insertLogical(new IdleSequence($m, $one, $two, isShutdown, resultingCost));
 end
 
@@ -98,7 +98,7 @@ rule "Penalize idle cycles"
 when
     $s: IdleSequence($cost: cost)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, -$cost);
 end
 
 rule "Penalize first startup and last shutdown"
@@ -106,7 +106,7 @@ when
     $m: Machine()
     exists MachineHasTask(machine == $m)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOfRespin().negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, -$m.getCostOfRespin());
 end
 
 rule "Properly marks shutdowns for the solution export"

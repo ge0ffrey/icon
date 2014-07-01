@@ -2,15 +2,17 @@ package org.optaplanner.examples.icon.domain;
 
 import java.math.BigDecimal;
 
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
+
 public class PeriodPowerCost {
 
-    private final BigDecimal cost;
+    private final long cost;
 
     private final Period period;
 
     PeriodPowerCost(final Period period, final BigDecimal consumption) {
         this.period = period;
-        this.cost = consumption;
+        this.cost = FixedPointArithmetic.fromBigDecimal(consumption);
     }
 
     @Override
@@ -35,7 +37,7 @@ public class PeriodPowerCost {
         return true;
     }
 
-    public BigDecimal getCost() {
+    public long getCost() {
         return this.cost;
     }
 
@@ -58,9 +60,7 @@ public class PeriodPowerCost {
         if (period != null) {
             builder.append("period=").append(period).append(", ");
         }
-        if (cost != null) {
-            builder.append("cost=").append(cost);
-        }
+        builder.append("cost=").append(cost);
         builder.append("]");
         return builder.toString();
     }

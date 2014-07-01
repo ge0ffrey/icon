@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
+
 /**
  * Two machines are never equal. You must make sure that two machines with the same ID never exist at the same time in
  * the JVM.
@@ -14,22 +16,22 @@ public class Machine {
 
     private final Map<Resource, MachineCapacity> capacities = new HashMap<Resource, MachineCapacity>();
 
-    private final BigDecimal costOfRespin;
+    private final long costOfRespin;
 
-    private final BigDecimal costOnShutdown;
+    private final long costOnShutdown;
 
-    private final BigDecimal costOnStartup;
+    private final long costOnStartup;
 
-    private final BigDecimal costWhenIdle;
+    private final long costWhenIdle;
 
     private final int id;
 
     public Machine(final int id, final BigDecimal costIdle, final BigDecimal costUp, final BigDecimal costDown, final List<Integer> resourceCapacity) {
         this.id = id;
-        this.costWhenIdle = costIdle;
-        this.costOnStartup = costUp;
-        this.costOnShutdown = costDown;
-        this.costOfRespin = costUp.add(costDown);
+        this.costWhenIdle = FixedPointArithmetic.fromBigDecimal(costIdle);
+        this.costOnStartup = FixedPointArithmetic.fromBigDecimal(costUp);
+        this.costOnShutdown = FixedPointArithmetic.fromBigDecimal(costDown);
+        this.costOfRespin = FixedPointArithmetic.fromBigDecimal(costUp.add(costDown));
         for (int i = 0; i < resourceCapacity.size(); i++) {
             final Resource r = Resource.get(i);
             this.capacities.put(r, new MachineCapacity(this, r, resourceCapacity.get(i)));
@@ -40,19 +42,19 @@ public class Machine {
         return this.capacities.get(resource);
     }
 
-    public BigDecimal getCostOfRespin() {
+    public long getCostOfRespin() {
         return this.costOfRespin;
     }
 
-    public BigDecimal getCostOnShutdown() {
+    public long getCostOnShutdown() {
         return this.costOnShutdown;
     }
 
-    public BigDecimal getCostOnStartup() {
+    public long getCostOnStartup() {
         return this.costOnStartup;
     }
 
-    public BigDecimal getCostWhenIdle() {
+    public long getCostWhenIdle() {
         return this.costWhenIdle;
     }
 

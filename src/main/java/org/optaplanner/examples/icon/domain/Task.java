@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 import org.optaplanner.examples.icon.util.PeriodValueRange;
 
 public class Task {
@@ -24,7 +25,7 @@ public class Task {
     private final Period earliestStart;
     private final int id;
     private final Period latestEnd;
-    private final BigDecimal powerConsumption;
+    private final long powerConsumption;
     private final Object2IntMap<Resource> resourceConsumption = new Object2IntOpenHashMap<Resource>();
 
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption, final Collection<Machine> machines) {
@@ -35,7 +36,7 @@ public class Task {
         this.duration = duration;
         this.earliestStart = Period.get(earliestStart);
         this.latestEnd = Period.get(dueBy - 1); // exclusive to inclusive
-        this.powerConsumption = powerUse;
+        this.powerConsumption = FixedPointArithmetic.fromBigDecimal(powerUse);
         final Set<Machine> tmp = new LinkedHashSet<Machine>(machines);
         long difficulty = duration;
         for (int i = 0; i < resourceConsumption.size(); i++) {
@@ -97,7 +98,7 @@ public class Task {
         return this.latestEnd;
     }
 
-    public BigDecimal getPowerConsumption() {
+    public long getPowerConsumption() {
         return this.powerConsumption;
     }
 
@@ -116,9 +117,7 @@ public class Task {
         if (this.latestEnd != null) {
             builder.append("latestEnd=").append(this.latestEnd).append(", ");
         }
-        if (this.powerConsumption != null) {
-            builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
-        }
+        builder.append("powerConsumption=").append(this.powerConsumption).append(", ");
         if (this.resourceConsumption != null) {
             builder.append("resourceConsumption=").append(this.resourceConsumption);
         }

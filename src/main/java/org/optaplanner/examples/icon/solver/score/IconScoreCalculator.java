@@ -1,6 +1,5 @@
 package org.optaplanner.examples.icon.solver.score;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,23 +10,24 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.util.Pair;
-import org.optaplanner.core.api.score.buildin.hardsoftbigdecimal.HardSoftBigDecimalScore;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Resource;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 
 public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
 
     private final class InternalCalculator {
 
-        private BigDecimal idleCosts = BigDecimal.ZERO;
-        private BigDecimal shutdownCosts = BigDecimal.ZERO;
+        private long idleCosts = 0;
+        private long shutdownCosts = 0;
         private final Schedule sched;
-        private BigDecimal startupCosts = BigDecimal.ZERO;
-        private BigDecimal taskCosts = BigDecimal.ZERO;
+        private long startupCosts = 0;
+        private long taskCosts = 0;
 
         public InternalCalculator(final Schedule sched) {
             this.sched = sched;
@@ -36,28 +36,28 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
         private void addIdle(final Machine m, final Period start, final Period end) {
             for (int i = start.getId(); i <= end.getId(); i++) {
                 final Period p = Period.get(i);
-                this.idleCosts = this.idleCosts.add(this.getCost(p, m.getCostWhenIdle()));
+                this.idleCosts += this.getCost(p, m.getCostWhenIdle());
             }
         }
 
         private void addShutdown(final Machine m) {
-            this.shutdownCosts = this.shutdownCosts.add(m.getCostOnShutdown());
+            this.shutdownCosts += m.getCostOnShutdown();
         }
 
         private void addStartup(final Machine m) {
-            this.startupCosts = this.startupCosts.add(m.getCostOnStartup());
+            this.startupCosts += m.getCostOnStartup();
         }
 
         private void addTask(final TaskAssignment t, final Period p) {
-            this.taskCosts = this.taskCosts.add(this.getCost(p, t.getTask().getPowerConsumption()));
+            this.taskCosts += this.getCost(p, t.getTask().getPowerConsumption());
         }
 
-        private BigDecimal getCost(final Period p, final BigDecimal partialCost) {
-            BigDecimal cost = this.sched.getForecast().getForPeriod(p).getCost();
-            return cost.multiply(partialCost);
+        private long getCost(final Period p, final long partialCost) {
+            final long cost = this.sched.getForecast().getForPeriod(p).getCost();
+            return FixedPointArithmetic.multiply(cost, partialCost);
         }
 
-        public BigDecimal hardScore() {
+        public long hardScore() {
             long overuse = 0;
             for (final Machine m : this.sched.getMachines()) {
                 final Map<Period, Map<Resource, Integer>> consumptions = new TreeMap<Period, Map<Resource, Integer>>();
@@ -93,10 +93,10 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
                     }
                 }
             }
-            return BigDecimal.valueOf(overuse);
+            return overuse;
         }
 
-        public BigDecimal softScore() {
+        public long softScore() {
             final Map<Machine, Set<Period>> runningTasks = new HashMap<Machine, Set<Period>>();
             // get costs for running tasks
             for (final TaskAssignment ta : this.sched.getTaskAssignments()) {
@@ -170,18 +170,18 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
                 this.addStartup(m);
                 this.addShutdown(m);
                 for (final Period p : entry.getValue()) {
-                    this.idleCosts = this.idleCosts.add(this.getCost(p, m.getCostWhenIdle()));
+                    this.idleCosts += this.getCost(p, m.getCostWhenIdle());
                 }
             }
-            return this.taskCosts.add(this.idleCosts).add(this.startupCosts).add(this.shutdownCosts).negate();
+            return 0 - this.taskCosts - this.idleCosts - this.startupCosts - this.shutdownCosts;
         }
 
     }
 
     @Override
-    public HardSoftBigDecimalScore calculateScore(final Schedule sched) {
+    public HardSoftLongScore calculateScore(final Schedule sched) {
         final InternalCalculator calc = new InternalCalculator(sched);
-        return HardSoftBigDecimalScore.valueOf(calc.hardScore(), calc.softScore());
+        return HardSoftLongScore.valueOf(calc.hardScore(), calc.softScore());
     }
 
 }
