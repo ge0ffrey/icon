@@ -7,7 +7,8 @@
   <scoreDirectorFactory>
     <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
     <scoreDefinitionType>HARD_SOFT_LONG</scoreDefinitionType>
-    <scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl>
+    <!-- scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl -->
+    <incrementalScoreCalculatorClass>org.optaplanner.examples.icon.solver.score.IconIncrementalScoreCalculator</incrementalScoreCalculatorClass>
   </scoreDirectorFactory>
   <termination>
     <minutesSpentLimit>5</minutesSpentLimit>
