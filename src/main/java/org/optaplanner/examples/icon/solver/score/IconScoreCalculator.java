@@ -1,7 +1,6 @@
 package org.optaplanner.examples.icon.solver.score;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,9 +23,7 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
 
     private final class InternalCalculator {
 
-        private final BigDecimal costMultiplier;
         private BigDecimal idleCosts = BigDecimal.ZERO;
-
         private BigDecimal shutdownCosts = BigDecimal.ZERO;
         private final Schedule sched;
         private BigDecimal startupCosts = BigDecimal.ZERO;
@@ -34,7 +31,6 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
 
         public InternalCalculator(final Schedule sched) {
             this.sched = sched;
-            this.costMultiplier = BigDecimal.valueOf(sched.getResolution()).divide(BigDecimal.valueOf(60), 10, RoundingMode.HALF_UP);
         }
 
         private void addIdle(final Machine m, final Period start, final Period end) {
@@ -58,8 +54,7 @@ public class IconScoreCalculator implements EasyScoreCalculator<Schedule> {
 
         private BigDecimal getCost(final Period p, final BigDecimal partialCost) {
             BigDecimal cost = this.sched.getForecast().getForPeriod(p).getCost();
-            cost = cost.multiply(partialCost);
-            return cost.multiply(this.costMultiplier);
+            return cost.multiply(partialCost);
         }
 
         public BigDecimal hardScore() {

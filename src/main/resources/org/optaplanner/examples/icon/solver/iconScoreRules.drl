@@ -14,7 +14,6 @@ import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.PeriodPowerCost;
 
 global HardSoftBigDecimalScoreHolder scoreHolder;
-global BigDecimal costMultiplier;
 
 // ################ declared types ########################
 
@@ -27,25 +26,11 @@ declare IdleSequence
     machine: Machine
     startsAfter: Period
     endsBefore: Period
-    isShutdown: boolean
+    isShutdown: boolean // what the cost below actually means
     cost: BigDecimal // either the cost of all the idle time, or cost of startup+shutdown
 end
 
-// ################# shared stuff ###########################
-
-rule "Determine cost multiplier"
-salience 1000 // run absolute first
-when
-    $total: Set() from collect(
-        Period()
-    )
-then
-    BigDecimal minutesInDay = BigDecimal.valueOf(1440);
-    BigDecimal numOfPeriods = BigDecimal.valueOf($total.size());
-    BigDecimal resolution = minutesInDay.divide(numOfPeriods); // minutes per period
-    BigDecimal sixty = BigDecimal.valueOf(60); // hours per period
-    drools.getWorkingMemory().setGlobal("costMultiplier", resolution.divide(sixty, 10, RoundingMode.HALF_UP));
-end
+// ################ scoring ########################
 
 rule "Is Machine active at a given time?"
 salience 900 // reused by most other rules; run near first
@@ -55,7 +40,7 @@ when
     exists TaskAssignment(executor == $m, $p >= startPeriod, $p <= finalPeriod)
 then
     insertLogical(new MachineHasTask($p, $m));
-    BigDecimal idleCost = $c.multiply($m.getCostWhenIdle()).multiply(costMultiplier);
+    BigDecimal idleCost = $c.multiply($m.getCostWhenIdle());
     scoreHolder.addSoftConstraintMatch(kcontext, idleCost.negate());
 end
 
@@ -84,8 +69,7 @@ when
         sumBD($t.getPowerCost())
     )
 then
-    BigDecimal adjustedCost = $cost.multiply(costMultiplier);
-    scoreHolder.addSoftConstraintMatch(kcontext, adjustedCost.negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $cost.negate());
 end
 
 rule "Detect periods when machines have no tasks, decide if idle or startup+shutdown, and calculate costs properly"
@@ -103,7 +87,7 @@ when
         sumBD($cost)
     ) 
 then
-    BigDecimal actualIdleCost = $idleCost.multiply($m.getCostWhenIdle()).multiply(costMultiplier);
+    BigDecimal actualIdleCost = $idleCost.multiply($m.getCostWhenIdle());
     BigDecimal restartCost = $m.getCostOnStartup().add($m.getCostOnShutdown());
     boolean isShutdown = actualIdleCost.compareTo(restartCost) > 0;
     BigDecimal resultingCost = isShutdown ? restartCost : actualIdleCost;

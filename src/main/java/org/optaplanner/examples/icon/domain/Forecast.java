@@ -20,7 +20,17 @@ public class Forecast {
             this.maxValue = numPeriods;
         }
 
-        public ForecastBuilder addForecast(final String period, final String forecast) {
+        /**
+         *
+         * @param period
+         * @param forecast
+         *            The forecasted power cost.
+         * @param multiplier
+         *            Q/60, see constraints 13 and 14. Accounting for this in power costs here prevents us to multiply
+         *            everything by this number during scoring.
+         * @return
+         */
+        public ForecastBuilder addForecast(final String period, final String forecast, final BigDecimal multiplier) {
             if (this.forecasts.size() == this.maxValue) {
                 throw new IllegalStateException("Already seen the expected number of forecasts.");
             }
@@ -28,7 +38,7 @@ public class Forecast {
             if (this.forecasts.containsKey(periodId)) {
                 throw new IllegalArgumentException("Already seen forecast for period: " + periodId);
             }
-            this.forecasts.put(Period.get(Integer.valueOf(period)), new BigDecimal(forecast));
+            this.forecasts.put(Period.get(Integer.valueOf(period)), new BigDecimal(forecast).multiply(multiplier));
             return this;
         }
 
