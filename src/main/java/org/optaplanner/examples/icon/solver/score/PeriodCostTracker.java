@@ -9,6 +9,7 @@ import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
+import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 
 /**
  * Calculates costs for idle time and or startup+shutdown.
@@ -30,11 +31,13 @@ public class PeriodCostTracker {
 
     public long add(final TaskAssignment ta) {
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
-        final long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
+        long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
         for (int i = ta.getStartPeriod().getId(); i <= ta.getFinalPeriod().getId(); i++) {
             final Period p = Period.get(i);
             if (!this.activeTasks.containsKey(p)) {
                 this.activeTasks.put(p, new HashSet<TaskAssignment>());
+                // adding a new period when the machine is definitely running
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(p).getCost());
             }
             this.activeTasks.get(p).add(ta);
         }
@@ -60,8 +63,9 @@ public class PeriodCostTracker {
             final Set<TaskAssignment> runningTasks = this.activeTasks.get(p);
             runningTasks.remove(ta);
             if (runningTasks.isEmpty()) {
-                // no more tasks, machine is inactive during this period
                 this.activeTasks.remove(p);
+                // removing a period when the machine is definitely running
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(p).getCost());
             }
         }
         if (this.activeTasks.size() == 0) {
