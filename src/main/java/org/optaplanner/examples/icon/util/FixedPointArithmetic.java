@@ -1,11 +1,10 @@
 package org.optaplanner.examples.icon.util;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class FixedPointArithmetic {
 
-    // the least value where the score reported by us and by the solution checker are equal to within 0.0001.
+    // the least value where the scores reported by us and by the solution checker are equal to within 0.0001.
     private static final int DEFAULT_SCALE = 11;
 
     public static long fromBigDecimal(final BigDecimal value) {
@@ -17,22 +16,25 @@ public class FixedPointArithmetic {
     }
 
     public static long multiply(final long first, final int firstScale, final long second, final int secondScale, final int targetScale) {
-        /*
-         * need to work with BigInteger to avoid long overflows in the default scale. this is a performance hit, but
-         * it's still much better than when all the sums were done in BigDecimal as well.
-         */
-        final BigInteger i = BigInteger.valueOf(first);
-        final BigInteger j = BigInteger.valueOf(second);
-        final BigInteger result = i.multiply(j);
-        final int sourceScale = firstScale + secondScale;
+        // to avoid long overflows and BigInteger, we deliberately lose some precision
+        final int scaleLoss = 3; // the least loss that I think is enough to avoid long overflow 
+        final int scaleLossFactor = (int) Math.pow(10, scaleLoss);
+        final long actualFirst = first / scaleLossFactor;
+        final long actualSecond = second / scaleLossFactor;
+        final int actualFirstScale = firstScale - scaleLoss;
+        final int actualSecondScale = secondScale - scaleLoss;
+        // and now calculate the result and convert it to the proper scale
+        final long result = actualFirst * actualSecond;
+        // FIXME we should somehow do overflow detection here; just to be sure
+        final int sourceScale = actualFirstScale + actualSecondScale;
         if (sourceScale == targetScale) {
-            return result.longValue();
+            return result;
         } else {
             final long scaleAdjustment = (long) Math.pow(10, Math.abs(sourceScale - targetScale));
             if (sourceScale > targetScale) {
-                return result.divide(BigInteger.valueOf(scaleAdjustment)).longValue();
+                return result / scaleAdjustment;
             } else {
-                return result.multiply(BigInteger.valueOf(scaleAdjustment)).longValue();
+                return result * scaleAdjustment;
             }
         }
     }
