@@ -1,6 +1,7 @@
 package org.optaplanner.examples.icon.solver.score;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,7 +29,16 @@ public class PeriodCostTracker {
     }
 
     public long add(final TaskAssignment ta) {
-        return 0;
+        // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
+        final long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
+        for (int i = ta.getStartPeriod().getId(); i <= ta.getFinalPeriod().getId(); i++) {
+            final Period p = Period.get(i);
+            if (!this.activeTasks.containsKey(p)) {
+                this.activeTasks.put(p, new HashSet<TaskAssignment>());
+            }
+            this.activeTasks.get(p).add(ta);
+        }
+        return costChange;
     }
 
     public long getCost() {
@@ -44,7 +54,21 @@ public class PeriodCostTracker {
     }
 
     public long remove(final TaskAssignment ta) {
-        return 0;
+        long costChange = 0;
+        for (int i = ta.getStartPeriod().getId(); i <= ta.getFinalPeriod().getId(); i++) {
+            final Period p = Period.get(i);
+            final Set<TaskAssignment> runningTasks = this.activeTasks.get(p);
+            runningTasks.remove(ta);
+            if (runningTasks.isEmpty()) {
+                // no more tasks, machine is inactive during this period
+                this.activeTasks.remove(p);
+            }
+        }
+        if (this.activeTasks.size() == 0) {
+            // the machine is never started or stopped; change the constraints
+            costChange += ta.getExecutor().getCostOfRespin();
+        }
+        return costChange;
     }
 
 }
