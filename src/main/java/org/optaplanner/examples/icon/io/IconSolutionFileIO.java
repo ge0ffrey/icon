@@ -39,20 +39,18 @@ public class IconSolutionFileIO implements SolutionFileIO {
     }
 
     @Override
-    public Solution read(File inputSolutionDirectory) {
+    public Schedule read(File inputSolutionDirectory) {
         if (inputSolutionDirectory == null || !inputSolutionDirectory.isDirectory()) {
             throw new IllegalArgumentException("Invalid input solution directory (" + inputSolutionDirectory + ").");
         }
         File forecastInputSolutionFile = new File(inputSolutionDirectory, FORECAST_FILENAME + "." + FILE_EXTENSION);
         File instanceInputSolutionFile = new File(inputSolutionDirectory, INSTANCE_FILENAME + "." + FILE_EXTENSION);
 
-        Solution solution = null;
         try {
-            solution = ProblemParser.parse(forecastInputSolutionFile, instanceInputSolutionFile);
+            return ProblemParser.parse(forecastInputSolutionFile, instanceInputSolutionFile);
         } catch (IOException ex) {
             throw new IllegalStateException("Exception while loading input solution files.", ex);
         }
-        return solution;
     }
 
     @Override
@@ -175,17 +173,10 @@ public class IconSolutionFileIO implements SolutionFileIO {
             return on;
         }
 
-        public void setOn(boolean on) {
-            this.on = on;
-        }
-
         public int getTime() {
             return time;
         }
 
-        public void setTime(int time) {
-            this.time = time;
-        }
     }
 
     private static class TaskAssignmentStartingPeriodComparator implements Comparator<TaskAssignment> {
