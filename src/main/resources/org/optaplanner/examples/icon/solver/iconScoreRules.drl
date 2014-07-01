@@ -88,7 +88,7 @@ when
     ) 
 then
     BigDecimal actualIdleCost = $idleCost.multiply($m.getCostWhenIdle());
-    BigDecimal restartCost = $m.getCostOnStartup().add($m.getCostOnShutdown());
+    BigDecimal restartCost = $m.getCostOfRespin();
     boolean isShutdown = actualIdleCost.compareTo(restartCost) > 0;
     BigDecimal resultingCost = isShutdown ? restartCost : actualIdleCost;
     insertLogical(new IdleSequence($m, $one, $two, isShutdown, resultingCost));
@@ -106,7 +106,7 @@ when
     $m: Machine()
     exists MachineHasTask(machine == $m)
 then
-    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOnStartup().add($m.getCostOnShutdown()).negate());
+    scoreHolder.addSoftConstraintMatch(kcontext, $m.getCostOfRespin().negate());
 end
 
 rule "Properly marks shutdowns for the solution export"

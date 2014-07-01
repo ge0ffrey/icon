@@ -14,6 +14,8 @@ public class Machine {
 
     private final Map<Resource, MachineCapacity> capacities = new HashMap<Resource, MachineCapacity>();
 
+    private final BigDecimal costOfRespin;
+
     private final BigDecimal costOnShutdown;
 
     private final BigDecimal costOnStartup;
@@ -27,6 +29,7 @@ public class Machine {
         this.costWhenIdle = costIdle;
         this.costOnStartup = costUp;
         this.costOnShutdown = costDown;
+        this.costOfRespin = costUp.add(costDown);
         for (int i = 0; i < resourceCapacity.size(); i++) {
             final Resource r = Resource.get(i);
             this.capacities.put(r, new MachineCapacity(this, r, resourceCapacity.get(i)));
@@ -35,6 +38,10 @@ public class Machine {
 
     public MachineCapacity getCapacity(final Resource resource) {
         return this.capacities.get(resource);
+    }
+
+    public BigDecimal getCostOfRespin() {
+        return this.costOfRespin;
     }
 
     public BigDecimal getCostOnShutdown() {
