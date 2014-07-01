@@ -40,14 +40,16 @@ public class PeriodCostTracker {
         final long valuationBefore = this.latestValuation;
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
         long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
-        for (int i = ta.getStartPeriod().getId(); i <= ta.getFinalPeriod().getId(); i++) {
-            final Period p = Period.get(i);
-            if (!this.activeTasks.containsKey(p)) {
-                this.activeTasks.put(p, new HashSet<TaskAssignment>());
+        Period current = ta.getStartPeriod();
+        final Period oneAfterLast = ta.getFinalPeriod().next();
+        while (current != oneAfterLast) {
+            if (!this.activeTasks.containsKey(current)) {
+                this.activeTasks.put(current, new HashSet<TaskAssignment>());
                 // adding a new period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(p).getCost());
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
             }
-            this.activeTasks.get(p).add(ta);
+            this.activeTasks.get(current).add(ta);
+            current = current.next();
         }
         final long valuationAfter = this.valuateIdleTime();
         final long differenceInValuation = valuationAfter - valuationBefore;
@@ -66,7 +68,7 @@ public class PeriodCostTracker {
             if (ta.getExecutor() != this.machine) {
                 // irrelevant to this tracker
                 continue;
-            } else if (ta.getFinalPeriod().getId() != start.getId() - 1) {
+            } else if (ta.getFinalPeriod() != start.previous()) {
                 continue;
             }
             if (idleCost > this.machine.getCostOfRespin()) {
@@ -82,9 +84,11 @@ public class PeriodCostTracker {
 
     private long getIdleCost(final Period start, final Period end) {
         long idleCost = 0;
-        for (int i = start.getId(); i <= end.getId(); i++) {
-            final Period p = Period.get(i);
-            idleCost += FixedPointArithmetic.multiply(this.schedule.getForecast().getForPeriod(p).getCost(), this.machine.getCostWhenIdle());
+        Period current = start;
+        final Period oneAfterLast = end.next();
+        while (current != oneAfterLast) {
+            idleCost += FixedPointArithmetic.multiply(this.schedule.getForecast().getForPeriod(current).getCost(), this.machine.getCostWhenIdle());
+            current = current.next();
         }
         return idleCost;
     }
@@ -100,15 +104,17 @@ public class PeriodCostTracker {
     public long remove(final TaskAssignment ta) {
         long costChange = 0;
         final long valuationBefore = this.latestValuation;
-        for (int i = ta.getStartPeriod().getId(); i <= ta.getFinalPeriod().getId(); i++) {
-            final Period p = Period.get(i);
-            final Set<TaskAssignment> runningTasks = this.activeTasks.get(p);
+        Period current = ta.getStartPeriod();
+        final Period oneAfterLast = ta.getFinalPeriod().next();
+        while (current != oneAfterLast) {
+            final Set<TaskAssignment> runningTasks = this.activeTasks.get(current);
             runningTasks.remove(ta);
             if (runningTasks.isEmpty()) {
-                this.activeTasks.remove(p);
+                this.activeTasks.remove(current);
                 // removing a period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(p).getCost());
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
             }
+            current = current.next();
         }
         if (this.activeTasks.size() == 0) {
             // the machine is never started or stopped; change the constraints
@@ -126,13 +132,16 @@ public class PeriodCostTracker {
         final Set<Period> running = this.activeTasks.keySet();
         boolean isInGap = false;
         Period firstInGap = null;
-        for (int i = 0; i <= this.lastPeriod.getId(); i++) {
-            final Period current = Period.get(i);
+        Period p = this.firstPeriod;
+        final Period oneAfterLast = this.lastPeriod.next();
+        while (p != oneAfterLast) {
+            final Period current = p;
+            p = p.next(); // do this now, as there is a lot of "continue" later
             if (running.contains(current)) {
                 if (isInGap) {
                     // end gap
                     isInGap = false;
-                    final Period lastInGap = Period.get(current.getId() - 1);
+                    final Period lastInGap = current.previous();
                     if (firstInGap == this.firstPeriod || lastInGap == this.lastPeriod) {
                         /*
                          * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last

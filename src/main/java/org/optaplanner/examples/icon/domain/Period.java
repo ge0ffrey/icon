@@ -19,6 +19,8 @@ public class Period implements Comparable<Period> {
 
     private final int id;
 
+    private Period next, previous;
+
     private Period(final int id) {
         this.id = id;
     }
@@ -36,6 +38,22 @@ public class Period implements Comparable<Period> {
 
     public int getId() {
         return this.id;
+    }
+
+    public Period next() {
+        if (this.next == null) {
+            this.next = Period.get(this.id + 1);
+        }
+        return this.next;
+    }
+
+    public Period previous() {
+        if (this.id == 0) {
+            throw new IllegalStateException("No previous period.");
+        } else if (this.previous == null) {
+            this.previous = Period.get(this.id - 1);
+        }
+        return this.previous;
     }
 
     @Override

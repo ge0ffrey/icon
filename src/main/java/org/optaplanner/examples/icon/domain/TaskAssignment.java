@@ -54,9 +54,11 @@ public class TaskAssignment {
     }
 
     public void setStartPeriod(final Period startPeriod) {
+        this.powerCost = 0; // reset so that it's recalculated on next access
         if (startPeriod == null) {
+            this.startPeriod = null;
             this.finalPeriod = null;
-            this.powerCost = 0;
+            return;
         } else if (this.startPeriod == startPeriod) {
             // no change
             return;
@@ -65,20 +67,9 @@ public class TaskAssignment {
             throw new IllegalArgumentException("Cannot set start period to: " + startPeriod);
         }
         this.startPeriod = startPeriod;
-        // calculate and cache periods that are occupied by this new task assignment
-        if (startPeriod == null) {
-            this.finalPeriod = null;
-            return;
-        }
         final int startPeriodId = this.getStartPeriod().getId();
         final int finalPeriodId = startPeriodId + this.task.getDuration() - 1;
         this.finalPeriod = Period.get(finalPeriodId);
-        // calculate power cost
-        long cost = 0;
-        for (int i = startPeriodId; i <= finalPeriodId; i++) {
-            cost += this.forecast.getForPeriod(Period.get(i)).getCost();;
-        }
-        this.powerCost = FixedPointArithmetic.multiply(cost, this.task.getPowerConsumption());
     }
 
     @ValueRangeProvider(id = "possibleStartPeriodRange")
@@ -92,7 +83,18 @@ public class TaskAssignment {
     }
 
     // FIXME changes with start period; should be shadow?
+    // FIXME is only ever used from DRL
     public long getPowerCost() {
+        if (this.isInitialized() && this.powerCost == 0) {
+            long cost = 0;
+            Period p = this.getStartPeriod();
+            final Period oneAfterLast = this.getFinalPeriod().next();
+            while (p != oneAfterLast) {
+                cost += this.forecast.getForPeriod(p).getCost();
+                p = p.next();
+            }
+            this.powerCost = FixedPointArithmetic.multiply(cost, this.task.getPowerConsumption());
+        }
         return this.powerCost;
     }
 
