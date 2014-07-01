@@ -3,11 +3,8 @@ package org.optaplanner.examples.icon.solver.score;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.commons.math3.util.Pair;
 import org.optaplanner.examples.icon.domain.Machine;
@@ -59,6 +56,37 @@ public class PeriodCostTracker {
         return this.cost;
     }
 
+    private long getGapCost(final Period start, final Period end) {
+        long totalCost = 0;
+        final long idleCost = this.getIdleCost(start, end);
+        // properly account for idle costs
+        for (final TaskAssignment ta : this.schedule.getTaskAssignments()) {
+            if (ta.getExecutor() != this.machine) {
+                // irrelevant to this tracker
+                continue;
+            } else if (ta.getFinalPeriod().getId() != start.getId() - 1) {
+                continue;
+            }
+            if (idleCost > this.machine.getCostOfRespin()) {
+                ta.setShutdownPossible(true);
+                totalCost += this.machine.getCostOfRespin();
+            } else {
+                ta.setShutdownPossible(false);
+                totalCost += idleCost;
+            }
+        }
+        return totalCost;
+    }
+
+    private long getIdleCost(final Period start, final Period end) {
+        long idleCost = 0;
+        for (int i = start.getId(); i <= end.getId(); i++) {
+            final Period p = Period.get(i);
+            idleCost += FixedPointArithmetic.multiply(this.schedule.getForecast().getForPeriod(p).getCost(), this.machine.getCostWhenIdle());
+        }
+        return idleCost;
+    }
+
     public Machine getMachine() {
         return this.machine;
     }
@@ -95,8 +123,7 @@ public class PeriodCostTracker {
         // get costs for shutdowns and startups
         final int maxPeriodId = 1440 / this.schedule.getResolution() - 1;
         final Set<Period> running = this.activeTasks.keySet();
-        // find all gaps where the machine has no tasks running
-        final List<Pair<Period, Period>> gaps = new LinkedList<Pair<Period, Period>>();
+        new LinkedList<Pair<Period, Period>>();
         boolean isInGap = false;
         Period firstInGap = null;
         for (int i = 0; i <= maxPeriodId; i++) {
@@ -105,7 +132,7 @@ public class PeriodCostTracker {
                 if (isInGap) {
                     // end gap
                     isInGap = false;
-                    Period lastInGap = Period.get(current.getId() - 1);
+                    final Period lastInGap = Period.get(current.getId() - 1);
                     if (firstInGap == Period.get(0) || lastInGap == Period.get(maxPeriodId)) {
                         /*
                          * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last
@@ -113,7 +140,7 @@ public class PeriodCostTracker {
                          */
                         continue;
                     }
-                    gaps.add(new Pair<Period, Period>(firstInGap, lastInGap));
+                    cost += this.getGapCost(firstInGap, lastInGap);
                 } else {
                     continue;
                 }
@@ -121,33 +148,6 @@ public class PeriodCostTracker {
                 if (!isInGap) {
                     isInGap = true;
                     firstInGap = current;
-                }
-            }
-        }
-        // now go through the gaps and properly account for their costs
-        for (final Pair<Period, Period> idle : gaps) {
-            final Period start = idle.getFirst();
-            final Period end = idle.getSecond();
-            // cost of the idle time; FIXME externalize
-            long idleCost = 0;
-            for (int i = start.getId(); i <= end.getId(); i++) {
-                final Period p = Period.get(i);
-                idleCost += FixedPointArithmetic.multiply(this.schedule.getForecast().getForPeriod(p).getCost(), this.machine.getCostWhenIdle());
-            }
-            // properly account for idle costs
-            for (final TaskAssignment ta : this.schedule.getTaskAssignments()) {
-                if (ta.getExecutor() != this.machine) {
-                    // irrelevant to this tracker
-                    continue;
-                } else if (ta.getFinalPeriod().getId() != start.getId() - 1) {
-                    continue;
-                }
-                if (idleCost > this.machine.getCostOfRespin()) {
-                    ta.setShutdownPossible(true);
-                    cost += this.machine.getCostOfRespin();
-                } else {
-                    ta.setShutdownPossible(false);
-                    cost += idleCost;
                 }
             }
         }
