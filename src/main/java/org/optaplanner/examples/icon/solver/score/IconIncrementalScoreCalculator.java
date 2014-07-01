@@ -56,6 +56,7 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         if (!entity.isInitialized()) {
             return;
         }
+        entity.setShutdownPossible(false); // refresh default state
         this.resourceConsumption.add(entity);
         this.costsOfRunningTasks.add(entity);
         this.costsOfRunningMachines.add(entity);
