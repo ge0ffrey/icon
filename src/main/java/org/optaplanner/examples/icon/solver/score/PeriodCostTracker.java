@@ -2,11 +2,9 @@ package org.optaplanner.examples.icon.solver.score;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.math3.util.Pair;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
@@ -22,15 +20,19 @@ public class PeriodCostTracker {
 
     private final long cost = 0;
 
+    private final Period firstPeriod = Period.get(0);
+
+    private final Period lastPeriod;
+
     private long latestValuation;
 
     private final Machine machine;
-
     private final Schedule schedule;
 
     public PeriodCostTracker(final Schedule schedule, final Machine m) {
         this.schedule = schedule;
         this.machine = m;
+        this.lastPeriod = Period.get(1440 / this.schedule.getResolution() - 1);
         this.latestValuation = this.valuateIdleTime();
     }
 
@@ -121,19 +123,17 @@ public class PeriodCostTracker {
     private long valuateIdleTime() {
         long cost = 0;
         // get costs for shutdowns and startups
-        final int maxPeriodId = 1440 / this.schedule.getResolution() - 1;
         final Set<Period> running = this.activeTasks.keySet();
-        new LinkedList<Pair<Period, Period>>();
         boolean isInGap = false;
         Period firstInGap = null;
-        for (int i = 0; i <= maxPeriodId; i++) {
+        for (int i = 0; i <= this.lastPeriod.getId(); i++) {
             final Period current = Period.get(i);
             if (running.contains(current)) {
                 if (isInGap) {
                     // end gap
                     isInGap = false;
                     final Period lastInGap = Period.get(current.getId() - 1);
-                    if (firstInGap == Period.get(0) || lastInGap == Period.get(maxPeriodId)) {
+                    if (firstInGap == this.firstPeriod || lastInGap == this.lastPeriod) {
                         /*
                          * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last
                          * shutdown
