@@ -31,16 +31,6 @@ public class CapacityTracker {
         this.process(a, true);
     }
 
-    private int[] getConsumptionInTime(final Machine m, final int time) {
-        final int[][] consumption = this.getConsumptionsForMachine(m);
-        final int[] totalUse = consumption[time];
-        if (totalUse == null) {
-            return consumption[time] = new int[this.resourceCount + 1];
-        } else {
-            return totalUse;
-        }
-    }
-
     private int[][] getConsumptionsForMachine(final Machine m) {
         final int machineId = m.getId();
         final int[][] consumptionPerMachine = this.resourceConsumptionInTime[machineId];
@@ -61,10 +51,6 @@ public class CapacityTracker {
         return this.overused;
     }
 
-    private void modifyConsumption(final int resourceId, final int requirement, final int resourceCapacity, final int[] consumptionInTime, final boolean isAdding) {
-        consumptionInTime[resourceId] = this.recalculateConsumption(consumptionInTime[resourceId], requirement, resourceCapacity, isAdding);
-    }
-
     private void process(final TaskAssignment a, final boolean isAdding) {
         final int startDate = a.getStartPeriod().getId();
         final int dueDate = a.getFinalPeriod().getId();
@@ -79,17 +65,22 @@ public class CapacityTracker {
         final int requirement = rr.getRequirement();
         final int resourceId = resource.getId();
         final int capacity = m.getCapacity(rr.getResource()).getCapacity();
+        final int[][] consumption = this.getConsumptionsForMachine(m);
         for (int time = startDate; time <= dueDate; time++) {
-            this.modifyConsumption(resourceId, requirement, capacity, this.getConsumptionInTime(m, time), isAdding);
+            int[] totalUse = consumption[time];
+            int currentUse = 0; // how much of the resource is being used at the given time
+            if (totalUse == null) { // nothing has been consumed so far
+                totalUse = new int[this.resourceCount];
+                consumption[time] = totalUse;
+            } else {
+                currentUse = totalUse[resourceId];
+            }
+            totalUse[resourceId] = isAdding ?
+                    this.recalculateConsumptionOnAddition(currentUse, requirement, capacity) :
+                    this.recalculateConsumptionOnRemoval(currentUse, requirement, capacity);
         }
     }
-
-    private int recalculateConsumption(final int consumption, final int newRequirement, final int resourceCapacity, final boolean isAdding) {
-        return isAdding ?
-                this.recalculateConsumptionOnAddition(consumption, newRequirement, resourceCapacity) :
-                this.recalculateConsumptionOnRemoval(consumption, newRequirement, resourceCapacity);
-    }
-
+    
     private int recalculateConsumptionOnAddition(final int currentTotalUse, final int requirement, final int capacity) {
         final int newTotalUse = requirement + currentTotalUse;
         if (currentTotalUse > capacity) {
