@@ -16,27 +16,10 @@ public class FixedPointArithmetic {
     }
 
     public static long multiply(final long first, final int firstScale, final long second, final int secondScale, final int targetScale) {
-        // to avoid long overflows and BigInteger, we deliberately lose some precision
-        final int scaleLoss = 3; // the least loss that I think is enough to avoid long overflow 
-        final int scaleLossFactor = (int) Math.pow(10, scaleLoss);
-        final long actualFirst = first / scaleLossFactor;
-        final long actualSecond = second / scaleLossFactor;
-        final int actualFirstScale = firstScale - scaleLoss;
-        final int actualSecondScale = secondScale - scaleLoss;
-        // and now calculate the result and convert it to the proper scale
-        final long result = actualFirst * actualSecond;
-        // FIXME we should somehow do overflow detection here; just to be sure
-        final int sourceScale = actualFirstScale + actualSecondScale;
-        if (sourceScale == targetScale) {
-            return result;
-        } else {
-            final long scaleAdjustment = (long) Math.pow(10, Math.abs(sourceScale - targetScale));
-            if (sourceScale > targetScale) {
-                return result / scaleAdjustment;
-            } else {
-                return result * scaleAdjustment;
-            }
-        }
+        final double firstDouble = first / Math.pow(10, firstScale);
+        final double secondDouble = second / Math.pow(10, secondScale);
+        final double result = firstDouble * secondDouble;
+        return Math.round(result * Math.pow(10, targetScale));
     }
 
     public static long multiply(final long first, final long second) {
