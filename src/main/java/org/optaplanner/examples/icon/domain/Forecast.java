@@ -1,10 +1,8 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMap;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -52,7 +50,7 @@ public class Forecast {
         return new ForecastBuilder(numPeriods);
     }
 
-    private final Object2ObjectSortedMap<Period, PeriodPowerCost> forecasts = new Object2ObjectAVLTreeMap<Period, PeriodPowerCost>();
+    private final Object2ObjectMap<Period, PeriodPowerCost> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerCost>();
 
     private Forecast(final Object2ObjectMap<Period, BigDecimal> forecasts) {
         for (final Entry<Period, BigDecimal> entry : forecasts.object2ObjectEntrySet()) {
