@@ -139,21 +139,20 @@ public class PeriodCostTracker {
             final Period current = p;
             p = p.next(); // do this now, as there is a lot of "continue" later
             if (running.contains(current)) {
-                if (isInGap) {
-                    // end gap
-                    isInGap = false;
-                    final Period lastInGap = current.previous();
-                    if (firstInGap == this.firstPeriod || lastInGap == this.lastPeriod) {
-                        /*
-                         * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last
-                         * shutdown
-                         */
-                        continue;
-                    }
-                    cost += this.getGapCost(firstInGap, lastInGap);
-                } else {
+                if (!isInGap) {
                     continue;
                 }
+                // end gap
+                isInGap = false;
+                final Period lastInGap = current.previous();
+                if (firstInGap == this.firstPeriod || lastInGap == this.lastPeriod) {
+                    /*
+                     * gaps that include 0 or max aren't gaps. they are pre-first startup and post-last
+                     * shutdown
+                     */
+                    continue;
+                }
+                cost += this.getGapCost(firstInGap, lastInGap);
             } else {
                 if (!isInGap) {
                     isInGap = true;
