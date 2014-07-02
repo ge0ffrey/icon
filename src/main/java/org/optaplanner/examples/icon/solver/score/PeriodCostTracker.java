@@ -1,7 +1,7 @@
 package org.optaplanner.examples.icon.solver.score;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,10 +17,11 @@ import org.optaplanner.examples.icon.util.FixedPointArithmetic;
 public class PeriodCostTracker {
 
     private final Map<Period, Set<TaskAssignment>> activeTasks = new HashMap<Period, Set<TaskAssignment>>();
-
     private final long cost = 0;
 
     private final Period firstPeriod = Period.get(0);
+
+    private final Set<TaskAssignment> knownTasks = new LinkedHashSet<TaskAssignment>();
 
     private final Period lastPeriod;
 
@@ -38,6 +39,7 @@ public class PeriodCostTracker {
 
     public long add(final TaskAssignment ta) {
         final long valuationBefore = this.latestValuation;
+        this.knownTasks.add(ta);
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
         long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
         Period current = ta.getStartPeriod();
@@ -45,7 +47,7 @@ public class PeriodCostTracker {
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
             if (tasks == null) {
-                tasks = new HashSet<TaskAssignment>();
+                tasks = new LinkedHashSet<TaskAssignment>();
                 this.activeTasks.put(current, tasks);
                 // adding a new period when the machine is definitely running
                 costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
@@ -66,14 +68,10 @@ public class PeriodCostTracker {
         long totalCost = 0;
         final long idleCost = this.getIdleCost(start, end);
         // properly account for idle costs
-        for (final TaskAssignment ta : this.schedule.getTaskAssignments()) {
-            if (ta.getExecutor() != this.machine) {
-                // irrelevant to this tracker; FIXME this is too much iteration
+        for (final TaskAssignment ta : this.knownTasks) {
+            if (ta.getFinalPeriod() != start.previous()) {
                 continue;
-            } else if (ta.getFinalPeriod() != start.previous()) {
-                continue;
-            }
-            if (idleCost > this.machine.getCostOfRespin()) {
+            } else if (idleCost > this.machine.getCostOfRespin()) {
                 ta.setShutdownPossible(true);
                 totalCost += this.machine.getCostOfRespin();
             } else {
@@ -124,6 +122,7 @@ public class PeriodCostTracker {
         }
         final long valuationAfter = this.valuateIdleTime();
         final long differenceInValuation = valuationAfter - valuationBefore;
+        this.knownTasks.remove(ta);
         return costChange - differenceInValuation;
     }
 
