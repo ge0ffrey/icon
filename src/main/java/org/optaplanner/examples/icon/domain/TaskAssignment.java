@@ -62,9 +62,6 @@ public class TaskAssignment {
         } else if (this.startPeriod == startPeriod) {
             // no change
             return;
-        } else if (!this.getStartPeriodValueRange().contains(startPeriod)) {
-            // defensive programming
-            throw new IllegalArgumentException("Cannot set start period to: " + startPeriod);
         }
         this.startPeriod = startPeriod;
         final int startPeriodId = this.getStartPeriod().getId();
