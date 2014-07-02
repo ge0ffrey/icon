@@ -48,17 +48,19 @@ public class PeriodCostTracker {
         long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
         Period current = ta.getStartPeriod();
         final Period oneAfterLast = ta.getFinalPeriod().next();
+        long tempCost = 0;
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
             if (tasks == null) {
                 tasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
                 this.activeTasks.put(current, tasks);
                 // adding a new period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.forecast.getForPeriod(current).getCost());
+                tempCost += this.forecast.getForPeriod(current).getCost();
             }
             tasks.add(ta);
             current = current.next();
         }
+        costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
         final long valuationAfter = this.valuateIdleTime();
         final long differenceInValuation = valuationAfter - valuationBefore;
         return costChange + differenceInValuation;
@@ -91,10 +93,10 @@ public class PeriodCostTracker {
         Period current = start;
         final Period oneAfterLast = end.next();
         while (current != oneAfterLast) {
-            idleCost += FixedPointArithmetic.multiply(this.forecast.getForPeriod(current).getCost(), this.machine.getCostWhenIdle());
+            idleCost += this.forecast.getForPeriod(current).getCost();
             current = current.next();
         }
-        return idleCost;
+        return FixedPointArithmetic.multiply(idleCost, this.machine.getCostWhenIdle());
     }
 
     public long remove(final TaskAssignment ta) {
@@ -102,16 +104,18 @@ public class PeriodCostTracker {
         final long valuationBefore = this.latestValuation;
         Period current = ta.getStartPeriod();
         final Period oneAfterLast = ta.getFinalPeriod().next();
+        long tempCost = 0;
         while (current != oneAfterLast) {
             final Set<TaskAssignment> runningTasks = this.activeTasks.get(current);
             runningTasks.remove(ta);
             if (runningTasks.isEmpty()) {
                 this.activeTasks.remove(current);
                 // removing a period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.forecast.getForPeriod(current).getCost());
+                tempCost += this.forecast.getForPeriod(current).getCost();
             }
             current = current.next();
         }
+        costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
         if (this.activeTasks.size() == 0) {
             // the machine is never started or stopped; change the constraints
             costChange += ta.getExecutor().getCostOfRespin();

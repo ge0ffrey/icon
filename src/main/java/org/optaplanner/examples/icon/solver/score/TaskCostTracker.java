@@ -25,18 +25,18 @@ public class TaskCostTracker {
     }
 
     private void process(final TaskAssignment ta, final boolean isAdding) {
-        final long powerConsumption = ta.getTask().getPowerConsumption();
         final Period onePastEnd = ta.getFinalPeriod().next();
         Period p = ta.getStartPeriod();
+        long tempCost = 0;
         while (p != onePastEnd) {
-            final long periodCost = this.forecast.getForPeriod(p).getCost();
-            final long totalCost = FixedPointArithmetic.multiply(powerConsumption, periodCost);
-            if (isAdding) {
-                this.cost += totalCost;
-            } else {
-                this.cost -= totalCost;
-            }
+            tempCost += this.forecast.getForPeriod(p).getCost();
             p = p.next();
+        }
+        final long totalCost = FixedPointArithmetic.multiply(ta.getTask().getPowerConsumption(), tempCost);
+        if (isAdding) {
+            this.cost += totalCost;
+        } else {
+            this.cost -= totalCost;
         }
     }
 
