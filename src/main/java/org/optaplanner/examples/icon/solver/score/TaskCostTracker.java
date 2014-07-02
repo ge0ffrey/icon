@@ -1,5 +1,6 @@
 package org.optaplanner.examples.icon.solver.score;
 
+import org.optaplanner.examples.icon.domain.Forecast;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
@@ -9,10 +10,10 @@ public class TaskCostTracker {
 
     private long cost = 0;
 
-    private final Schedule schedule;
+    private final Forecast forecast;
 
     public TaskCostTracker(final Schedule schedule) {
-        this.schedule = schedule;
+        this.forecast = schedule.getForecast();
     }
 
     public void add(final TaskAssignment ta) {
@@ -24,17 +25,18 @@ public class TaskCostTracker {
     }
 
     private void process(final TaskAssignment ta, final boolean isAdding) {
-        final Period start = ta.getStartPeriod();
-        final Period end = ta.getFinalPeriod();
         final long powerConsumption = ta.getTask().getPowerConsumption();
-        for (int i = start.getId(); i <= end.getId(); i++) {
-            final long periodCost = this.schedule.getForecast().getForPeriod(Period.get(i)).getCost();
+        final Period onePastEnd = ta.getFinalPeriod().next();
+        Period p = ta.getStartPeriod();
+        while (p != onePastEnd) {
+            final long periodCost = this.forecast.getForPeriod(p).getCost();
             final long totalCost = FixedPointArithmetic.multiply(powerConsumption, periodCost);
             if (isAdding) {
                 this.cost += totalCost;
             } else {
                 this.cost -= totalCost;
             }
+            p = p.next();
         }
     }
 
