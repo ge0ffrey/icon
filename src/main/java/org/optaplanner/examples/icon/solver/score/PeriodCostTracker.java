@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.optaplanner.examples.icon.domain.Forecast;
 import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
@@ -19,22 +20,25 @@ public class PeriodCostTracker {
     private final Map<Period, Set<TaskAssignment>> activeTasks = new HashMap<Period, Set<TaskAssignment>>();
     private final long cost = 0;
 
+    private final int estimatedTasksPerMachine;
+
     private final Period firstPeriod = Period.get(0);
 
-    private final Set<TaskAssignment> knownTasks = new LinkedHashSet<TaskAssignment>();
+    private final Forecast forecast;
 
+    private final Set<TaskAssignment> knownTasks;
     private final Period lastPeriod;
 
     private long latestValuation;
-
     private final Machine machine;
-    private final Schedule schedule;
 
     public PeriodCostTracker(final Schedule schedule, final Machine m) {
-        this.schedule = schedule;
+        this.forecast = schedule.getForecast();
+        this.estimatedTasksPerMachine = 2 * (1 + (schedule.getTaskAssignments().size() / schedule.getMachines().size()));
         this.machine = m;
-        this.lastPeriod = Period.get(1440 / this.schedule.getResolution() - 1);
+        this.lastPeriod = Period.get(1440 / schedule.getResolution() - 1);
         this.latestValuation = this.valuateIdleTime();
+        this.knownTasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
     }
 
     public long add(final TaskAssignment ta) {
@@ -47,10 +51,10 @@ public class PeriodCostTracker {
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
             if (tasks == null) {
-                tasks = new LinkedHashSet<TaskAssignment>();
+                tasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
                 this.activeTasks.put(current, tasks);
                 // adding a new period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.forecast.getForPeriod(current).getCost());
             }
             tasks.add(ta);
             current = current.next();
@@ -87,18 +91,10 @@ public class PeriodCostTracker {
         Period current = start;
         final Period oneAfterLast = end.next();
         while (current != oneAfterLast) {
-            idleCost += FixedPointArithmetic.multiply(this.schedule.getForecast().getForPeriod(current).getCost(), this.machine.getCostWhenIdle());
+            idleCost += FixedPointArithmetic.multiply(this.forecast.getForPeriod(current).getCost(), this.machine.getCostWhenIdle());
             current = current.next();
         }
         return idleCost;
-    }
-
-    public Machine getMachine() {
-        return this.machine;
-    }
-
-    public Schedule getSchedule() {
-        return this.schedule;
     }
 
     public long remove(final TaskAssignment ta) {
@@ -112,7 +108,7 @@ public class PeriodCostTracker {
             if (runningTasks.isEmpty()) {
                 this.activeTasks.remove(current);
                 // removing a period when the machine is definitely running
-                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
+                costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.forecast.getForPeriod(current).getCost());
             }
             current = current.next();
         }
