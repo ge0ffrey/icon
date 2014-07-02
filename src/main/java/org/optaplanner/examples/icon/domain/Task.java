@@ -1,7 +1,7 @@
 package org.optaplanner.examples.icon.domain;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -26,7 +26,7 @@ public class Task {
     private final int id;
     private final Period latestEnd;
     private final long powerConsumption;
-    private final Object2ObjectMap<Resource, ResourceRequirement> resourceConsumption = new Object2ObjectOpenHashMap<Resource, ResourceRequirement>();
+    private final Int2ObjectMap<ResourceRequirement> resourceConsumption = new Int2ObjectOpenHashMap<ResourceRequirement>();
 
     public Task(final int id, final int duration, final int earliestStart, final int dueBy, final BigDecimal powerUse, final List<Integer> resourceConsumption, final Collection<Machine> machines) {
         this.id = id;
@@ -40,10 +40,12 @@ public class Task {
         final Set<Machine> tmp = new LinkedHashSet<Machine>(machines);
         long difficulty = duration;
         for (int i = 0; i < resourceConsumption.size(); i++) {
-            final Resource r = Resource.get(i);
             final int consumption = resourceConsumption.get(i);
-            difficulty *= consumption + 1;
-            this.resourceConsumption.put(r, new ResourceRequirement(r, consumption));
+            if (consumption < 1) {
+                continue;
+            }
+            final Resource r = Resource.get(i);
+            this.resourceConsumption.put(i, new ResourceRequirement(r, consumption));
             // cleanse the list of available machines from machines that cannot accommodate this task
             final Iterator<Machine> iter = tmp.iterator();
             while (iter.hasNext()) {
@@ -52,6 +54,7 @@ public class Task {
                     iter.remove();
                 }
             }
+            difficulty *= consumption;
         }
         this.difficulty = difficulty;
         if (tmp.isEmpty()) {
@@ -70,7 +73,12 @@ public class Task {
     }
 
     public int getConsumption(final Resource resource) {
-        return this.resourceConsumption.get(resource).getRequirement();
+        final int id = resource.getId();
+        if (this.resourceConsumption.containsKey(id)) {
+            return this.resourceConsumption.get(id).getRequirement();
+        } else {
+            return 0;
+        }
     }
 
     public Collection<ResourceRequirement> getConsumptions() {
