@@ -43,12 +43,14 @@ public class PeriodCostTracker {
         Period current = ta.getStartPeriod();
         final Period oneAfterLast = ta.getFinalPeriod().next();
         while (current != oneAfterLast) {
-            if (!this.activeTasks.containsKey(current)) {
-                this.activeTasks.put(current, new HashSet<TaskAssignment>());
+            Set<TaskAssignment> tasks = this.activeTasks.get(current);
+            if (tasks == null) {
+                tasks = new HashSet<TaskAssignment>();
+                this.activeTasks.put(current, tasks);
                 // adding a new period when the machine is definitely running
                 costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), this.schedule.getForecast().getForPeriod(current).getCost());
             }
-            this.activeTasks.get(current).add(ta);
+            tasks.add(ta);
             current = current.next();
         }
         final long valuationAfter = this.valuateIdleTime();
@@ -66,7 +68,7 @@ public class PeriodCostTracker {
         // properly account for idle costs
         for (final TaskAssignment ta : this.schedule.getTaskAssignments()) {
             if (ta.getExecutor() != this.machine) {
-                // irrelevant to this tracker
+                // irrelevant to this tracker; FIXME this is too much iteration
                 continue;
             } else if (ta.getFinalPeriod() != start.previous()) {
                 continue;

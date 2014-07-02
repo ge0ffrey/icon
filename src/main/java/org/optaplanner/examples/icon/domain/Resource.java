@@ -10,10 +10,13 @@ public class Resource {
     public synchronized static Resource get(final int id) {
         if (id < 0) {
             throw new IllegalArgumentException("Resource IDs start at 0, you asked for: " + id);
-        } else if (!Resource.RESOURCES.containsKey(id)) {
-            Resource.RESOURCES.put(id, new Resource(id));
         }
-        return Resource.RESOURCES.get(id);
+        Resource r = Resource.RESOURCES.get(id);
+        if (r == null) {
+            r = new Resource(id);
+            Resource.RESOURCES.put(id, r);
+        }
+        return r;
     }
 
     private final int id;

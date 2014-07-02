@@ -23,10 +23,12 @@ public class MachineCostTracker {
 
     public void add(final TaskAssignment ta) {
         final Machine m = ta.getExecutor();
-        if (!this.subtrackers.containsKey(m)) {
-            this.subtrackers.put(m, new PeriodCostTracker(this.schedule, m));
+        PeriodCostTracker t = this.subtrackers.get(m);
+        if (t == null) {
+            t = new PeriodCostTracker(this.schedule, m);
+            this.subtrackers.put(m, t);
         }
-        this.cost += this.subtrackers.get(m).add(ta);
+        this.cost += t.add(ta);
     }
 
     public long getCost() {

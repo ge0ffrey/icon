@@ -11,10 +11,12 @@ public class Period implements Comparable<Period> {
         if (id < 0) {
             throw new IllegalStateException("Periods start at 0, you asked for: " + id);
         }
-        if (!Period.PERIODS.containsKey(id)) {
-            Period.PERIODS.put(id, new Period(id));
+        Period p = Period.PERIODS.get(id);
+        if (p == null) {
+            p = new Period(id);
+            Period.PERIODS.put(id, p);
         }
-        return Period.PERIODS.get(id);
+        return p;
     }
 
     private final int id;
