@@ -7,13 +7,18 @@ import org.optaplanner.examples.icon.domain.TaskAssignment;
 
 public class IconIncrementalScoreCalculator implements IncrementalScoreCalculator<Schedule> {
 
+    private static boolean isStartPeriodVariable(final String variableName) {
+        return variableName.equals("startPeriod");
+    }
+
     private MachineCostTracker costsOfRunningMachines;
     private TaskCostTracker costsOfRunningTasks;
+
     private CapacityTracker resourceConsumption;
 
     @Override
     public void afterEntityAdded(final Object entity) {
-        this.insert((TaskAssignment) entity);
+        this.insert((TaskAssignment) entity, true);
     }
 
     @Override
@@ -22,7 +27,7 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
 
     @Override
     public void afterVariableChanged(final Object entity, final String variableName) {
-        this.insert((TaskAssignment) entity);
+        this.insert((TaskAssignment) entity, IconIncrementalScoreCalculator.isStartPeriodVariable(variableName));
     }
 
     @Override
@@ -31,12 +36,12 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
 
     @Override
     public void beforeEntityRemoved(final Object entity) {
-        this.retract((TaskAssignment) entity);
+        this.retract((TaskAssignment) entity, true);
     }
 
     @Override
     public void beforeVariableChanged(final Object entity, final String variableName) {
-        this.retract((TaskAssignment) entity);
+        this.retract((TaskAssignment) entity, IconIncrementalScoreCalculator.isStartPeriodVariable(variableName));
     }
 
     @Override
@@ -52,14 +57,19 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         return HardSoftLongScore.valueOf(-hardScore, -softScore);
     }
 
-    private void insert(final TaskAssignment entity) {
+    private void insert(final TaskAssignment entity, final boolean modifyingStartPeriod) {
         if (!entity.isInitialized()) {
             return;
         }
-        entity.setShutdownPossible(false); // refresh default state
         this.resourceConsumption.add(entity);
-        this.costsOfRunningTasks.add(entity);
         this.costsOfRunningMachines.add(entity);
+        if (modifyingStartPeriod) {
+            /*
+             * if we're only modifying the machine on which the task is running, and therefore the entity had already
+             * been added before, the task costs will not change
+             */
+            this.costsOfRunningTasks.add(entity);
+        }
     }
 
     @Override
@@ -68,17 +78,23 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         this.costsOfRunningMachines = new MachineCostTracker(workingSolution);
         this.resourceConsumption = new CapacityTracker(workingSolution);
         for (final TaskAssignment ta : workingSolution.getTaskAssignments()) {
-            this.insert(ta);
+            this.insert(ta, true);
         }
     }
 
-    private void retract(final TaskAssignment entity) {
+    private void retract(final TaskAssignment entity, final boolean modifyingStartPeriod) {
         if (!entity.isInitialized()) {
             return;
         }
         this.resourceConsumption.remove(entity);
-        this.costsOfRunningTasks.remove(entity);
         this.costsOfRunningMachines.remove(entity);
+        if (modifyingStartPeriod) {
+            /*
+             * if we're only modifying the machine on which the task is running, and therefore the entity had already
+             * been added before, the task costs will not change
+             */
+            this.costsOfRunningTasks.remove(entity);
+        }
     }
 
 }
