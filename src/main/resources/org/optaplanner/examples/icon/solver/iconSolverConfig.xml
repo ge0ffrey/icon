@@ -15,36 +15,10 @@
   </termination>
   
   <constructionHeuristic>
-    <queuedEntityPlacer>
-      <entitySelector id="placerEntitySelector">
-        <cacheType>PHASE</cacheType>
-        <sorterManner>DECREASING_DIFFICULTY</sorterManner>
-        <selectionOrder>SORTED</selectionOrder> 
-        <!-- 
-            ^^^^ this is weird; don't specify any order and planner fails?
-            it should be smarter than that. if it knows what it needs and I don't specify,
-            it should pick the necessary setting. 
-        -->
-      </entitySelector>
-      <cartesianProductMoveSelector>
-        <changeMoveSelector>
-          <entitySelector mimicSelectorRef="placerEntitySelector"/>
-          <selectionOrder>RANDOM</selectionOrder>
-          <valueSelector>
-            <variableName>executor</variableName>
-          </valueSelector>
-          <selectedCountLimit>10</selectedCountLimit>
-        </changeMoveSelector>
-        <changeMoveSelector>
-          <entitySelector mimicSelectorRef="placerEntitySelector"/>
-          <selectionOrder>RANDOM</selectionOrder>
-          <valueSelector>
-            <variableName>startPeriod</variableName>
-          </valueSelector>
-          <selectedCountLimit>3</selectedCountLimit>
-        </changeMoveSelector>
-      </cartesianProductMoveSelector>
-    </queuedEntityPlacer>
+    <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+    <forager>
+      <pickEarlyType>FIRST_FEASIBLE_SCORE_OR_NON_DETERIORATING_HARD</pickEarlyType>
+    </forager>
   </constructionHeuristic>
   <localSearch>
     <unionMoveSelector>
