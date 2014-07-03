@@ -26,7 +26,6 @@ public class PeriodCostTracker {
 
     private final Forecast forecast;
 
-    private final Set<TaskAssignment> knownTasks;
     private final Period lastPeriod;
 
     private long latestValuation;
@@ -38,11 +37,9 @@ public class PeriodCostTracker {
         this.machine = m;
         this.lastPeriod = Period.get(1440 / schedule.getResolution() - 1);
         this.latestValuation = this.valuateIdleTime();
-        this.knownTasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
     }
 
     public long add(final TaskAssignment ta) {
-        this.knownTasks.add(ta);
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
         long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
         Period current = ta.getStartPeriod();
@@ -77,10 +74,8 @@ public class PeriodCostTracker {
         long totalCost = 0;
         final long idleCost = this.getIdleCost(start, end);
         // properly account for idle costs
-        for (final TaskAssignment ta : this.knownTasks) {
-            if (ta.getFinalPeriod() != start.previous()) {
-                continue;
-            } else if (idleCost > this.machine.getCostOfRespin()) {
+        for (final TaskAssignment ta : this.activeTasks.get(start.previous())) {
+            if (idleCost > this.machine.getCostOfRespin()) {
                 ta.setShutdownPossible(true);
                 totalCost += this.machine.getCostOfRespin();
             } else {
@@ -125,7 +120,6 @@ public class PeriodCostTracker {
             // the machine is never started or stopped; change the constraints
             costChange += ta.getExecutor().getCostOfRespin();
         }
-        this.knownTasks.remove(ta);
         return costChange;
     }
 
