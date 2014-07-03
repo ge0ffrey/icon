@@ -1,6 +1,6 @@
 package org.optaplanner.examples.icon.solver.score;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.optaplanner.examples.icon.domain.Machine;
@@ -15,7 +15,7 @@ public class MachineCostTracker {
     private long cost = 0;
 
     private final Schedule schedule;
-    private final Map<Machine, PeriodCostTracker> subtrackers = new HashMap<Machine, PeriodCostTracker>();
+    private final Map<Machine, PeriodCostTracker> subtrackers = new LinkedHashMap<Machine, PeriodCostTracker>();
 
     public MachineCostTracker(final Schedule schedule) {
         this.schedule = schedule;

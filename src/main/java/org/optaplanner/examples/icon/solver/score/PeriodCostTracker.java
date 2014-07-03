@@ -1,6 +1,6 @@
 package org.optaplanner.examples.icon.solver.score;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -17,7 +17,7 @@ import org.optaplanner.examples.icon.util.FixedPointArithmetic;
  */
 public class PeriodCostTracker {
 
-    private final Map<Period, Set<TaskAssignment>> activeTasks = new HashMap<Period, Set<TaskAssignment>>();
+    private final Map<Period, Set<TaskAssignment>> activeTasks = new LinkedHashMap<Period, Set<TaskAssignment>>();
     private final long cost = 0;
 
     private final int estimatedTasksPerMachine;
