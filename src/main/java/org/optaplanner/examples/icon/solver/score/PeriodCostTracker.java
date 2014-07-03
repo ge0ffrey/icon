@@ -70,19 +70,12 @@ public class PeriodCostTracker {
     }
 
     private long getGapCost(final Period start, final Period end) {
-        long totalCost = 0;
         final long idleCost = this.getIdleCost(start, end);
-        // properly account for idle costs
+        final boolean shutdownPossible = idleCost > this.machine.getCostOfRespin(); 
         for (final TaskAssignment ta : this.activeTasks.get(start.previous())) {
-            if (idleCost > this.machine.getCostOfRespin()) {
-                ta.setShutdownPossible(true);
-                totalCost += this.machine.getCostOfRespin();
-            } else {
-                ta.setShutdownPossible(false);
-                totalCost += idleCost;
-            }
+            ta.setShutdownPossible(shutdownPossible);
         }
-        return totalCost;
+        return shutdownPossible ? this.machine.getCostOfRespin() : idleCost;
     }
 
     private long getIdleCost(final Period start, final Period end) {
