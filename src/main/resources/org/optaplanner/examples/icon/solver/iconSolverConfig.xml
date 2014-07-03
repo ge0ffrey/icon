@@ -32,16 +32,10 @@
           <variableName>executor</variableName>
         </valueSelector>
       </changeMoveSelector>
-      <!-- swap moves need to be filtered as:
-        a/ some tasks cannot be assigned to some machines, due to more resource consumption than capacity
-        b/ some periods cannot be assigned to some tasks, due to start date / deadline constraints
-      -->
       <swapMoveSelector>
-        <!--<filterClass>org.optaplanner.examples.icon.solver.move.ExecutorSwapMoveFilter</filterClass>-->
         <variableNameInclude>executor</variableNameInclude>
       </swapMoveSelector>
       <swapMoveSelector>
-        <!--<filterClass>org.optaplanner.examples.icon.solver.move.PeriodSwapMoveFilter</filterClass>-->
         <variableNameInclude>startPeriod</variableNameInclude>
       </swapMoveSelector>
     </unionMoveSelector>
