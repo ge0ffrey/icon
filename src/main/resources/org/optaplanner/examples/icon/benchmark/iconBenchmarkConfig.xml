@@ -2,7 +2,7 @@
 
 <plannerBenchmark>
   <benchmarkDirectory>local/data/icon</benchmarkDirectory>
-  <parallelBenchmarkCount>AUTO</parallelBenchmarkCount>
+  <parallelBenchmarkCount>1</parallelBenchmarkCount>
   <warmUpSecondsSpentLimit>30</warmUpSecondsSpentLimit>
 
   <inheritedSolverBenchmark>
@@ -62,46 +62,25 @@
     </problemBenchmarks>
 
     <solver>
-      <solutionClass>org.optaplanner.examples.icon.domain.Schedule</solutionClass>
-      <entityClass>org.optaplanner.examples.icon.domain.TaskAssignment</entityClass>
-
       <scoreDirectorFactory>
-        <scoreDefinitionType>HARD_SOFT_BIG_DECIMAL</scoreDefinitionType>
-        <scoreDrl>org/optaplanner/examples/icon/solver/iconScoreRules.drl</scoreDrl>
+        <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
+        <scoreDefinitionType>HARD_SOFT_LONG</scoreDefinitionType>
+        <incrementalScoreCalculatorClass>org.optaplanner.examples.icon.solver.score.IconIncrementalScoreCalculator</incrementalScoreCalculatorClass>
       </scoreDirectorFactory>
       <termination>
-        <secondsSpentLimit>300</secondsSpentLimit>
+        <minutesSpentLimit>5</minutesSpentLimit>
       </termination>
       <constructionHeuristic>
-        <queuedEntityPlacer>
-          <entitySelector id="placerEntitySelector">
-            <cacheType>PHASE</cacheType>
-          </entitySelector>
-          <cartesianProductMoveSelector>
-            <changeMoveSelector>
-              <entitySelector mimicSelectorRef="placerEntitySelector"/>
-              <selectionOrder>RANDOM</selectionOrder>
-              <selectedCountLimit>3</selectedCountLimit>
-              <valueSelector>
-                <variableName>executor</variableName>
-              </valueSelector>
-            </changeMoveSelector>
-            <changeMoveSelector>
-              <entitySelector mimicSelectorRef="placerEntitySelector"/>
-              <selectionOrder>RANDOM</selectionOrder>
-              <selectedCountLimit>10</selectedCountLimit>
-              <valueSelector>
-                <variableName>startPeriod</variableName>
-              </valueSelector>
-            </changeMoveSelector>
-          </cartesianProductMoveSelector>
-        </queuedEntityPlacer>
+        <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+        <forager>
+          <pickEarlyType>FIRST_FEASIBLE_SCORE_OR_NON_DETERIORATING_HARD</pickEarlyType>
+        </forager>
       </constructionHeuristic>
     </solver>
   </inheritedSolverBenchmark>
 
   <solverBenchmark>
-    <name>Construction Heuristic</name>
+    <name>Production run</name>
   </solverBenchmark>
 
   <solverBenchmark>
@@ -119,16 +98,10 @@
               <variableName>executor</variableName>
             </valueSelector>
           </changeMoveSelector>
-          <!-- swap moves need to be filtered as:
-            a/ some tasks cannot be assigned to some machines, due to more resource consumption than capacity
-            b/ some periods cannot be assigned to some tasks, due to start date / deadline constraints
-          -->
           <swapMoveSelector>
-            <!--<filterClass>org.optaplanner.examples.icon.solver.move.ExecutorSwapMoveFilter</filterClass>-->
             <variableNameInclude>executor</variableNameInclude>
           </swapMoveSelector>
           <swapMoveSelector>
-            <!--<filterClass>org.optaplanner.examples.icon.solver.move.PeriodSwapMoveFilter</filterClass>-->
             <variableNameInclude>startPeriod</variableNameInclude>
           </swapMoveSelector>
         </unionMoveSelector>
