@@ -7,7 +7,6 @@ import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.io.IconSolutionFileIO;
-import org.optaplanner.examples.icon.solver.score.IconScoreCalculator;
 
 public class Main {
 
@@ -25,8 +24,6 @@ public class Main {
         solver.solve(solution);
         final Schedule bestSolution = (Schedule) solver.getBestSolution();
         iconSolutionFileIO.write(bestSolution, new File(inputFolder, "solution.txt"));
-        final IconScoreCalculator calc = new IconScoreCalculator();
-        System.out.println("Asserted score: " + calc.calculateScore(bestSolution));
     }
 
 }
