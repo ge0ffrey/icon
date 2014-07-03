@@ -64,10 +64,7 @@ public class PeriodCostTracker {
         }
         costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
         if (idleInformationChanged) {
-            final long valuationBefore = this.latestValuation;
-            final long valuationAfter = this.valuateIdleTime();
-            final long differenceInValuation = valuationAfter - valuationBefore;
-            costChange += differenceInValuation;
+            costChange += this.valuateIdleTime();
         }
         return costChange;
     }
@@ -122,10 +119,7 @@ public class PeriodCostTracker {
         }
         costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
         if (idleInformationChanged) {
-            final long valuationBefore = this.latestValuation;
-            final long valuationAfter = this.valuateIdleTime();
-            final long differenceInValuation = valuationAfter - valuationBefore;
-            costChange -= differenceInValuation;
+            costChange -= this.valuateIdleTime();
         }
         if (this.activeTasks.size() == 0) {
             // the machine is never started or stopped; change the constraints
@@ -169,8 +163,9 @@ public class PeriodCostTracker {
                 }
             }
         }
+        long previousValuation = this.latestValuation;
         this.latestValuation = cost;
-        return cost;
+        return cost - previousValuation;
     }
 
 }
