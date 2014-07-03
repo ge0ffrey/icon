@@ -17,6 +17,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.optaplanner.core.api.domain.solution.Solution;
+import org.optaplanner.examples.icon.domain.Machine;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
 import org.optaplanner.examples.icon.parser.ProblemParser;
@@ -56,8 +57,9 @@ public class IconSolutionFileIO implements SolutionFileIO {
     @Override
     public void write(Solution solution, File outputSolutionFile) {
         Schedule schedule = (Schedule) solution;
+        List<Machine> machineList = new ArrayList<Machine>(schedule.getMachines());
         List<TaskAssignment> taskAssignmentList = new ArrayList<TaskAssignment>(schedule.getTaskAssignments());
-        Map<Integer, List<TaskAssignment>> machineTaskMap = buildMachineTaskAssignmentMap(taskAssignmentList);
+        Map<Integer, List<TaskAssignment>> machineTaskMap = buildMachineTaskAssignmentMap(machineList, taskAssignmentList);
         Map<Integer, List<MachineOnOffEventHolder>> machineOnOffEventMap = getMachineOnOffMapping(machineTaskMap);
         
         BufferedWriter writer = null;
@@ -68,18 +70,19 @@ public class IconSolutionFileIO implements SolutionFileIO {
             for (Entry<Integer, List<MachineOnOffEventHolder>> entry : machineOnOffEventMap.entrySet()) {
                 writer.write(String.valueOf(entry.getKey())); // machine id
                 writer.newLine();
-                if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                    writer.write(String.valueOf(entry.getValue().size())); // number of on/off events
+                List<MachineOnOffEventHolder> onOffEvents = entry.getValue();
+                if (onOffEvents.isEmpty()) {
+                    writer.write(String.valueOf(0));
                     writer.newLine();
-                    for (MachineOnOffEventHolder eventHolder : entry.getValue()) {
+                } else {
+                    writer.write(String.valueOf(onOffEvents.size())); // number of on/off events
+                    writer.newLine();
+                    for (MachineOnOffEventHolder eventHolder : onOffEvents) {
                         writer.write(eventHolder.isOn() ? String.valueOf(1) : String.valueOf(0)); // on/off event
                         writer.write(" ");
                         writer.write(String.valueOf(eventHolder.getTime())); // time of event
                         writer.newLine();
                     }
-                } else {
-                    writer.write(String.valueOf(0));
-                    writer.newLine();
                 }
             }
             writer.write(String.valueOf(taskAssignmentList.size())); // number of tasks
@@ -99,16 +102,20 @@ public class IconSolutionFileIO implements SolutionFileIO {
         }
     }
 
-    private Map<Integer, List<TaskAssignment>> buildMachineTaskAssignmentMap(List<TaskAssignment> taskList) {
+    private Map<Integer, List<TaskAssignment>> buildMachineTaskAssignmentMap(List<Machine> machineList, List<TaskAssignment> taskList) {
         Map<Integer, List<TaskAssignment>> machineTaskAssignmentMap = new HashMap<Integer, List<TaskAssignment>>();
-        for (TaskAssignment taskAssignment : taskList) {
-            final int taskAssignmentId = taskAssignment.getExecutor().getId();
-            if (!machineTaskAssignmentMap.containsKey(taskAssignmentId)) {
-                List<TaskAssignment> taskAssignmentList = new ArrayList<TaskAssignment>();
-                taskAssignmentList.add(taskAssignment);
-                machineTaskAssignmentMap.put(taskAssignmentId, taskAssignmentList);
+        for (Machine m: machineList) {
+            final int machineId = m.getId();
+            if (!machineTaskAssignmentMap.containsKey(m)) {
+                machineTaskAssignmentMap.put(machineId, new ArrayList<TaskAssignment>());
             }
-            machineTaskAssignmentMap.get(taskAssignmentId).add(taskAssignment);
+            List<TaskAssignment> taskAssignmentList = machineTaskAssignmentMap.get(machineId);
+            for (TaskAssignment taskAssignment : taskList) {
+                if (taskAssignment.getExecutor() != m) {
+                    continue;
+                }
+                taskAssignmentList.add(taskAssignment);
+            }
         }
         return machineTaskAssignmentMap;
     }
@@ -117,15 +124,16 @@ public class IconSolutionFileIO implements SolutionFileIO {
         Map<Integer, List<MachineOnOffEventHolder>> machineOnOffEventMap = new TreeMap<Integer, List<MachineOnOffEventHolder>>();
         TaskAssignmentStartingPeriodComparator comparator = new TaskAssignmentStartingPeriodComparator();
         for (Entry<Integer, List<TaskAssignment>> entry : machineTaskMap.entrySet()) {
-            if (entry.getValue() == null && entry.getValue().isEmpty()) {
+            List<TaskAssignment> assignments = entry.getValue();
+            machineOnOffEventMap.put(entry.getKey(), new ArrayList<MachineOnOffEventHolder>());
+            if (assignments.isEmpty()) {
                 continue;
             }
-            machineOnOffEventMap.put(entry.getKey(), new ArrayList<MachineOnOffEventHolder>());
             // sort task assignments by starting period
-            Collections.sort(entry.getValue(), comparator);
+            Collections.sort(assignments, comparator);
 
             TaskAssignment latestEndingTimeAssignment = null;
-            Iterator<TaskAssignment> taskAssignmentIterator = entry.getValue().iterator();
+            Iterator<TaskAssignment> taskAssignmentIterator = assignments.iterator();
             while (taskAssignmentIterator.hasNext()) {
                 TaskAssignment taskAssignment = taskAssignmentIterator.next();
                 if (latestEndingTimeAssignment != null && latestEndingTimeAssignment.getShutdownPossible()
