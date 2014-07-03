@@ -42,28 +42,33 @@ public class PeriodCostTracker {
     }
 
     public long add(final TaskAssignment ta) {
-        final long valuationBefore = this.latestValuation;
         this.knownTasks.add(ta);
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
         long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
         Period current = ta.getStartPeriod();
         final Period oneAfterLast = ta.getFinalPeriod().next();
         long tempCost = 0;
+        boolean idleInformationChanged = false;
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
             if (tasks == null) {
+                // period is no longer idle
                 tasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
                 this.activeTasks.put(current, tasks);
-                // adding a new period when the machine is definitely running
                 tempCost += this.forecast.getForPeriod(current).getCost();
+                idleInformationChanged = true;
             }
             tasks.add(ta);
             current = current.next();
         }
         costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
-        final long valuationAfter = this.valuateIdleTime();
-        final long differenceInValuation = valuationAfter - valuationBefore;
-        return costChange + differenceInValuation;
+        if (idleInformationChanged) {
+            final long valuationBefore = this.latestValuation;
+            final long valuationAfter = this.valuateIdleTime();
+            final long differenceInValuation = valuationAfter - valuationBefore;
+            costChange += differenceInValuation;
+        }
+        return costChange;
     }
 
     public long getCost() {
@@ -101,29 +106,34 @@ public class PeriodCostTracker {
 
     public long remove(final TaskAssignment ta) {
         long costChange = 0;
-        final long valuationBefore = this.latestValuation;
         Period current = ta.getStartPeriod();
         final Period oneAfterLast = ta.getFinalPeriod().next();
         long tempCost = 0;
+        boolean idleInformationChanged = false;
         while (current != oneAfterLast) {
             final Set<TaskAssignment> runningTasks = this.activeTasks.get(current);
             runningTasks.remove(ta);
             if (runningTasks.isEmpty()) {
+                // period goes idle
                 this.activeTasks.remove(current);
-                // removing a period when the machine is definitely running
                 tempCost += this.forecast.getForPeriod(current).getCost();
+                idleInformationChanged = true;
             }
             current = current.next();
         }
         costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
+        if (idleInformationChanged) {
+            final long valuationBefore = this.latestValuation;
+            final long valuationAfter = this.valuateIdleTime();
+            final long differenceInValuation = valuationAfter - valuationBefore;
+            costChange -= differenceInValuation;
+        }
         if (this.activeTasks.size() == 0) {
             // the machine is never started or stopped; change the constraints
             costChange += ta.getExecutor().getCostOfRespin();
         }
-        final long valuationAfter = this.valuateIdleTime();
-        final long differenceInValuation = valuationAfter - valuationBefore;
         this.knownTasks.remove(ta);
-        return costChange - differenceInValuation;
+        return costChange;
     }
 
     // FIXME this is not very incremental
