@@ -51,10 +51,11 @@ public class PeriodCostTracker {
         boolean idleInformationChanged = false;
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
-            if (tasks == null) {
-                // period is no longer idle
+            if (tasks == null) { // initialize
                 tasks = new LinkedHashSet<TaskAssignment>(this.estimatedTasksPerMachine);
                 this.activeTasks.put(current, tasks);
+            }
+            if (tasks.isEmpty()) { // period will leave idle state
                 tempCost += this.forecast.getForPeriod(current).getCost();
                 idleInformationChanged = true;
             }
@@ -113,9 +114,7 @@ public class PeriodCostTracker {
         while (current != oneAfterLast) {
             final Set<TaskAssignment> runningTasks = this.activeTasks.get(current);
             runningTasks.remove(ta);
-            if (runningTasks.isEmpty()) {
-                // period goes idle
-                this.activeTasks.remove(current);
+            if (runningTasks.isEmpty()) { // period will become idle
                 tempCost += this.forecast.getForPeriod(current).getCost();
                 idleInformationChanged = true;
             }
