@@ -59,6 +59,7 @@
       <inputSolutionFile>data/icon/input/instance48</inputSolutionFile>
       <inputSolutionFile>data/icon/input/instance49</inputSolutionFile>
       <problemStatisticType>BEST_SCORE</problemStatisticType>
+      <writeOutputSolutionEnabled>true</writeOutputSolutionEnabled>
     </problemBenchmarks>
 
     <solver>
@@ -99,8 +100,6 @@
           </changeMoveSelector>
           <swapMoveSelector>
             <variableNameInclude>executor</variableNameInclude>
-          </swapMoveSelector>
-          <swapMoveSelector>
             <variableNameInclude>startPeriod</variableNameInclude>
           </swapMoveSelector>
         </unionMoveSelector>

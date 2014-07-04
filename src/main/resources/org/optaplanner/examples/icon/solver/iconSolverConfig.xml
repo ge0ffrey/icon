@@ -34,8 +34,6 @@
       </changeMoveSelector>
       <swapMoveSelector>
         <variableNameInclude>executor</variableNameInclude>
-      </swapMoveSelector>
-      <swapMoveSelector>
         <variableNameInclude>startPeriod</variableNameInclude>
       </swapMoveSelector>
     </unionMoveSelector>
