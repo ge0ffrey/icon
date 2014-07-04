@@ -62,6 +62,9 @@
     </problemBenchmarks>
 
     <solver>
+      <environmentMode>REPRODUCIBLE</environmentMode>
+      <solutionClass>org.optaplanner.examples.icon.domain.Schedule</solutionClass>
+      <entityClass>org.optaplanner.examples.icon.domain.TaskAssignment</entityClass>
       <scoreDirectorFactory>
         <initializingScoreTrend>ONLY_DOWN</initializingScoreTrend>
         <scoreDefinitionType>HARD_SOFT_LONG</scoreDefinitionType>
@@ -81,10 +84,6 @@
 
   <solverBenchmark>
     <name>Production run</name>
-  </solverBenchmark>
-
-  <solverBenchmark>
-    <name>Late Acceptance</name>
     <solver>
       <localSearch>
         <unionMoveSelector>
