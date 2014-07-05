@@ -18,7 +18,6 @@ package org.optaplanner.examples.icon;
 
 import java.io.IOException;
 
-import org.optaplanner.benchmark.api.PlannerBenchmark;
 import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
 import org.optaplanner.benchmark.impl.aggregator.swingui.BenchmarkAggregatorFrame;
 
