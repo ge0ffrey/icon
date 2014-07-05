@@ -42,7 +42,7 @@
       <entityTabuRatio>0.3</entityTabuRatio>
     </acceptor>
     <forager>
-      <acceptedCountLimit>4</acceptedCountLimit>
+      <acceptedCountLimit>2</acceptedCountLimit>
     </forager>
   </localSearch>
 </solver>
