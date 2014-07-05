@@ -46,12 +46,13 @@ public class TaskCostTracker {
         return this.cost;
     }
 
+    public void modify(final TaskAssignment ta) {
+        this.remove(ta);
+        this.add(ta);
+    }
+
     public void remove(final TaskAssignment ta) {
-        /*
-         * we do not remove the cost from cache; this is technically stale data now, but the remove operation is not
-         * worth the cost in execution time
-         */
-        this.cost -= this.costCache.get(ta.getTask().getId());
+        this.cost -= this.costCache.remove(ta.getTask().getId());
     }
 
 }

@@ -41,11 +41,16 @@ public class PeriodCostTracker {
 
     public long add(final TaskAssignment ta) {
         // if we're adding the first task, the machine becomes active. add one default startup/shutdown cost
-        long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
-        Period current = ta.getStartPeriod();
-        final Period oneAfterLast = ta.getFinalPeriod().next();
-        long tempCost = 0;
+        final long costChange = this.activeTasks.isEmpty() ? ta.getExecutor().getCostOfRespin() : 0;
+        return costChange + this.addPeriod(ta, ta.getStartPeriod(), ta.getFinalPeriod());
+    }
+
+    private long addPeriod(final TaskAssignment ta, final Period start, final Period last) {
         boolean idleInformationChanged = false;
+        final Period oneAfterLast = last.next();
+        long costChange = 0;
+        long tempCost = 0;
+        Period current = start;
         while (current != oneAfterLast) {
             Set<TaskAssignment> tasks = this.activeTasks.get(current);
             if (tasks == null) {
@@ -71,7 +76,7 @@ public class PeriodCostTracker {
 
     private long getGapCost(final Period start, final Period end) {
         final long idleCost = this.getIdleCost(start, end);
-        final boolean shutdownPossible = idleCost > this.machine.getCostOfRespin(); 
+        final boolean shutdownPossible = idleCost > this.machine.getCostOfRespin();
         for (final TaskAssignment ta : this.activeTasks.get(start.previous())) {
             ta.setShutdownPossible(shutdownPossible);
         }
@@ -89,30 +94,79 @@ public class PeriodCostTracker {
         return FixedPointArithmetic.multiply(idleCost, this.machine.getCostWhenIdle());
     }
 
+    public long modify(final TaskAssignment ta, final Period previousStartPeriod, final Period previousFinalPeriod) {
+        final int previousStart = previousStartPeriod.getId();
+        final int previousFinal = previousFinalPeriod.getId();
+        final Period currentStartPeriod = ta.getStartPeriod();
+        final Period currentFinalPeriod = ta.getFinalPeriod();
+        final int currentStart = currentStartPeriod.getId();
+        final int currentFinal = currentFinalPeriod.getId();
+
+        long totalChange = 0;
+        final int periodsToRecalculate = Math.abs(previousStart - currentStart);
+        final boolean differentialMakesSense = periodsToRecalculate < ta.getTask().getDuration();
+        if (previousStart > currentStart) {
+            // task moves to the left
+            final boolean hasOverlap = currentFinal >= previousStart;
+            if (!hasOverlap || !differentialMakesSense) {
+                // optimization makes no sense; just make a direct remove/add
+                ta.setStartPeriod(previousStartPeriod);
+                totalChange -= this.remove(ta);
+                ta.setStartPeriod(currentStartPeriod);
+                totalChange += this.add(ta);
+            } else {
+                // there is overlap
+                totalChange += this.addPeriod(ta, currentStartPeriod, previousStartPeriod.previous());
+                totalChange -= this.removePeriod(ta, currentFinalPeriod.next(), previousFinalPeriod);
+            }
+        } else if (currentStart > previousStart) {
+            // task moves to the right
+            final boolean hasOverlap = previousFinal >= currentStart;
+            if (!hasOverlap || !differentialMakesSense) {
+                // optimization makes no sense; just make a direct remove/add
+                ta.setStartPeriod(previousStartPeriod);
+                totalChange -= this.remove(ta);
+                ta.setStartPeriod(currentStartPeriod);
+                totalChange += this.add(ta);
+            } else {
+                totalChange -= this.removePeriod(ta, previousStartPeriod, currentStartPeriod.previous());
+                totalChange += this.addPeriod(ta, previousFinalPeriod.next(), currentFinalPeriod);
+            }
+        }
+        return totalChange;
+    }
+
     public long remove(final TaskAssignment ta) {
+        final Period current = ta.getStartPeriod();
+        long costChange = this.removePeriod(ta, current, ta.getFinalPeriod());
+        if (this.activeTasks.size() == 0) {
+            // the machine is never started or stopped; change the constraints
+            costChange += ta.getExecutor().getCostOfRespin();
+        }
+        return costChange;
+    }
+
+    private long removePeriod(final TaskAssignment ta, final Period first, final Period last) {
         long costChange = 0;
-        Period current = ta.getStartPeriod();
-        final Period oneAfterLast = ta.getFinalPeriod().next();
         long tempCost = 0;
         boolean idleInformationChanged = false;
+        final Period oneAfterLast = last.next();
+        Period current = first;
         while (current != oneAfterLast) {
             final Set<TaskAssignment> runningTasks = this.activeTasks.get(current);
-            runningTasks.remove(ta);
-            if (runningTasks.isEmpty()) {
-                // period goes idle
+            if (runningTasks.size() == 1) {
+                // we know that this is the last task in the period; period will go idle
                 this.activeTasks.remove(current);
                 tempCost += this.forecast.getForPeriod(current).getCost();
                 idleInformationChanged = true;
+            } else {
+                runningTasks.remove(ta);
             }
             current = current.next();
         }
         costChange += FixedPointArithmetic.multiply(this.machine.getCostWhenIdle(), tempCost);
         if (idleInformationChanged) {
             costChange -= this.valuateIdleTime();
-        }
-        if (this.activeTasks.size() == 0) {
-            // the machine is never started or stopped; change the constraints
-            costChange += ta.getExecutor().getCostOfRespin();
         }
         return costChange;
     }
@@ -151,7 +205,7 @@ public class PeriodCostTracker {
                 }
             }
         }
-        long previousValuation = this.latestValuation;
+        final long previousValuation = this.latestValuation;
         this.latestValuation = cost;
         return cost - previousValuation;
     }

@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.optaplanner.examples.icon.domain.Machine;
+import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.domain.TaskAssignment;
 
@@ -33,6 +34,11 @@ public class MachineCostTracker {
 
     public long getCost() {
         return this.cost;
+    }
+
+    public void modify(final TaskAssignment ta, final Period previousStartPeriod, final Period previousFinalPeriod) {
+        final Machine m = ta.getExecutor();
+        this.cost += this.subtrackers.get(m).modify(ta, previousStartPeriod, previousFinalPeriod);
     }
 
     public void remove(final TaskAssignment ta) {
