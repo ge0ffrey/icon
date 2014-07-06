@@ -2,6 +2,13 @@ package org.optaplanner.examples.icon.util;
 
 import java.math.BigDecimal;
 
+/**
+ * This class intends to eliminate the problems of rounding errors in doubles without using BigDecimal. It mostly
+ * succeeds, but beware:
+ *
+ * (a+b)*x might not equal a*x + b*x. (By a difference of exactly 1.) Therefore, you should always use one of the two
+ * approaches and never mix them. You have been warned.
+ */
 public class FixedPointArithmetic {
 
     // the least value where the scores reported by us and by the solution checker are equal to within 0.0001.

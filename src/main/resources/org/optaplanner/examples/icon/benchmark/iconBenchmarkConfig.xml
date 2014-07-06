@@ -91,7 +91,7 @@
   </inheritedSolverBenchmark>
 
   <solverBenchmark>
-    <name>Production run</name>
+    <name>Tabu 0.2</name>
     <solver>
       <localSearch>
         <unionMoveSelector>
@@ -112,10 +112,40 @@
         </unionMoveSelector>
         <acceptor>
           <lateAcceptanceSize>400</lateAcceptanceSize>
-          <entityTabuRatio>0.3</entityTabuRatio>
+          <entityTabuRatio>0.2</entityTabuRatio>
         </acceptor>
         <forager>
-          <acceptedCountLimit>4</acceptedCountLimit>
+          <acceptedCountLimit>2</acceptedCountLimit>
+        </forager>
+      </localSearch>
+    </solver>
+  </solverBenchmark>
+  <solverBenchmark>
+    <name>Tabu 0.35</name>
+    <solver>
+      <localSearch>
+        <unionMoveSelector>
+          <changeMoveSelector>
+            <valueSelector>
+              <variableName>startPeriod</variableName>
+            </valueSelector>
+          </changeMoveSelector>
+          <changeMoveSelector>
+            <valueSelector>
+              <variableName>executor</variableName>
+            </valueSelector>
+          </changeMoveSelector>
+          <swapMoveSelector>
+            <variableNameInclude>executor</variableNameInclude>
+            <variableNameInclude>startPeriod</variableNameInclude>
+          </swapMoveSelector>
+        </unionMoveSelector>
+        <acceptor>
+          <lateAcceptanceSize>400</lateAcceptanceSize>
+          <entityTabuRatio>0.35</entityTabuRatio>
+        </acceptor>
+        <forager>
+          <acceptedCountLimit>2</acceptedCountLimit>
         </forager>
       </localSearch>
     </solver>

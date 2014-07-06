@@ -47,6 +47,10 @@ public class TaskCostTracker {
     }
 
     public void modify(final TaskAssignment ta) {
+        /*
+         * due to limitations in FixedPointArithmetic (see that class' comments), this stupid remove+add is faster than
+         * running this class refactored so that the multiplications happen on every cost retrieval.
+         */
         this.remove(ta);
         this.add(ta);
     }

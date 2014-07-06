@@ -39,9 +39,9 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
                 final boolean modifyingExecutor = this.previousExecutor != ta.getExecutor();
                 final boolean modifyingStartPeriod = this.previousStartPeriod != ta.getStartPeriod();
                 if (modifyingExecutor) {
-                    // everything changes with changing the executor
-                    this.retractWithSimulation(ta);
-                    this.insert(ta);
+                    // everything changes with changing the executor; except task costs
+                    this.retractWithSimulation(ta, false);
+                    this.insert(ta, false);
                 } else if (modifyingStartPeriod) {
                     // only some periods will change
                     this.costsOfRunningTasks.modify(ta);
@@ -88,14 +88,20 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         return HardSoftLongScore.valueOf(-hardScore, -softScore);
     }
 
-    private boolean insert(final TaskAssignment entity) {
+    private boolean insert(final TaskAssignment entity, final boolean needsToUpdateTaskCosts) {
         if (!entity.isInitialized()) {
             return false;
         }
         this.resourceConsumption.add(entity);
         this.costsOfRunningMachines.add(entity);
-        this.costsOfRunningTasks.add(entity);
+        if (needsToUpdateTaskCosts) {
+            this.costsOfRunningTasks.add(entity);
+        }
         return true;
+    }
+
+    private boolean insert(final TaskAssignment entity) {
+        return this.insert(entity, true);
     }
 
     @Override
@@ -108,24 +114,35 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
         }
     }
 
-    private boolean retract(final TaskAssignment entity) {
+    private boolean retract(final TaskAssignment entity, final boolean needsToUpdateTaskCosts) {
         if (!entity.isInitialized()) {
             return false;
         }
         this.resourceConsumption.remove(entity);
         this.costsOfRunningMachines.remove(entity);
-        this.costsOfRunningTasks.remove(entity);
+        if (needsToUpdateTaskCosts) {
+            this.costsOfRunningTasks.remove(entity);
+        }
         return true;
     }
 
-    private void retractWithSimulation(final TaskAssignment ta) {
+    private boolean retract(final TaskAssignment entity) {
+        return this.retract(entity, true);
+    }
+
+    private boolean retractWithSimulation(final TaskAssignment ta, final boolean needsToUpdateTaskCosts) {
         final Machine tmpExecutor = ta.getExecutor();
         final Period tmpPeriod = ta.getStartPeriod();
         ta.setExecutor(this.previousExecutor); // need to set previous values to safely remove
         ta.setStartPeriod(this.previousStartPeriod);
-        this.retract(ta);
+        final boolean result = this.retract(ta, needsToUpdateTaskCosts);
         ta.setExecutor(tmpExecutor); // and return the originals back
         ta.setStartPeriod(tmpPeriod);
+        return result;
+    }
+
+    private boolean retractWithSimulation(final TaskAssignment ta) {
+        return this.retractWithSimulation(ta, true);
     }
 
 }
