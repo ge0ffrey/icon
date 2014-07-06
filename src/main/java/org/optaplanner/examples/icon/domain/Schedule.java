@@ -49,10 +49,11 @@ public class Schedule implements Solution<HardSoftLongScore> {
     @Override
     public Collection<? extends Object> getProblemFacts() {
         final Collection<Object> facts = new LinkedList<Object>();
-        facts.addAll(this.getForecast().getAll());
         facts.addAll(this.getMachines());
         for (int i = 0; i < 1440 / this.getResolution(); i++) {
-            facts.add(Period.get(i));
+            final Period p = Period.get(i);
+            facts.add(p);
+            facts.add(this.getForecast().getForPeriod(p));
         }
         for (int i = 0; i < this.getResourceCount(); i++) {
             final Resource r = Resource.get(i);

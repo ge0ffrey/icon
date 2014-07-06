@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.math.BigDecimal;
-import java.util.Collection;
+import java.util.Arrays;
 
 public class Forecast {
 
@@ -50,25 +50,18 @@ public class Forecast {
         return new ForecastBuilder(numPeriods);
     }
 
-    private final Object2ObjectMap<Period, PeriodPowerCost> forecasts = new Object2ObjectOpenHashMap<Period, PeriodPowerCost>();
+    private final PeriodPowerCost[] forecasts;
 
     private Forecast(final Object2ObjectMap<Period, BigDecimal> forecasts) {
+        this.forecasts = new PeriodPowerCost[forecasts.size()];
         for (final Entry<Period, BigDecimal> entry : forecasts.object2ObjectEntrySet()) {
             final Period slot = entry.getKey();
-            this.forecasts.put(slot, new PeriodPowerCost(slot, entry.getValue()));
+            this.forecasts[slot.getId()] = new PeriodPowerCost(slot, entry.getValue());
         }
-    }
-
-    public Collection<PeriodPowerCost> getAll() {
-        return this.forecasts.values();
     }
 
     public PeriodPowerCost getForPeriod(final Period period) {
-        final PeriodPowerCost forecast = this.forecasts.get(period);
-        if (forecast == null) {
-            throw new IllegalArgumentException("Unknown forecasting period: " + period);
-        }
-        return forecast;
+        return this.forecasts[period.getId()];
     }
 
     @Override
@@ -76,7 +69,7 @@ public class Forecast {
         final StringBuilder builder = new StringBuilder();
         builder.append("Forecast [");
         if (this.forecasts != null) {
-            builder.append("forecasts=").append(this.forecasts);
+            builder.append("forecasts=").append(Arrays.toString(this.forecasts));
         }
         builder.append("]");
         return builder.toString();

@@ -1,8 +1,5 @@
 package org.optaplanner.examples.icon.solver.score;
 
-import it.unimi.dsi.fastutil.ints.Int2LongMap;
-import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
-
 import org.optaplanner.examples.icon.domain.Forecast;
 import org.optaplanner.examples.icon.domain.Period;
 import org.optaplanner.examples.icon.domain.Schedule;
@@ -13,12 +10,12 @@ public class TaskCostTracker {
 
     private long cost = 0;
 
-    private final Int2LongMap costCache;
+    private final long[] costCache;
     private final Forecast forecast;
 
     public TaskCostTracker(final Schedule schedule) {
         this.forecast = schedule.getForecast();
-        this.costCache = new Int2LongOpenHashMap(schedule.getTaskAssignments().size());
+        this.costCache = new long[schedule.getTaskAssignments().size()];
     }
 
     public void add(final TaskAssignment ta) {
@@ -27,7 +24,8 @@ public class TaskCostTracker {
          * which leads to a lot of iteration. we can prevent this duplicate effort during removal by caching here.
          */
         final long taskCost = this.calculateCost(ta);
-        this.costCache.put(ta.getTask().getId(), taskCost);
+        final int taskId = ta.getTask().getId();
+        this.costCache[taskId] = taskCost;
         // incur the penalty
         this.cost += taskCost;
     }
@@ -57,7 +55,7 @@ public class TaskCostTracker {
     }
 
     public void remove(final TaskAssignment ta) {
-        this.cost -= this.costCache.remove(ta.getTask().getId());
+        this.cost -= this.costCache[ta.getTask().getId()];
     }
 
 }
