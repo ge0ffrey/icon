@@ -13,11 +13,12 @@ public class TaskCostTracker {
 
     private long cost = 0;
 
-    private final Int2LongMap costCache = new Int2LongOpenHashMap();
+    private final Int2LongMap costCache;
     private final Forecast forecast;
 
     public TaskCostTracker(final Schedule schedule) {
         this.forecast = schedule.getForecast();
+        this.costCache = new Int2LongOpenHashMap(schedule.getTaskAssignments().size());
     }
 
     public void add(final TaskAssignment ta) {

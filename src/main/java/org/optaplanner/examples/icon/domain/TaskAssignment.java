@@ -22,7 +22,6 @@ public class TaskAssignment {
     private boolean mayShutdownOnCompletion = false;
 
     protected TaskAssignment() {
-        // FIXME planner cloning prevents immutability
     }
 
     public TaskAssignment(final Task task, final Forecast forecast) {

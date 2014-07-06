@@ -17,7 +17,7 @@ import org.optaplanner.examples.icon.util.FixedPointArithmetic;
  */
 public class PeriodCostTracker {
 
-    private final Map<Period, Set<TaskAssignment>> activeTasks = new LinkedHashMap<Period, Set<TaskAssignment>>();
+    private final Map<Period, Set<TaskAssignment>> activeTasks;
     private final long cost = 0;
 
     private final int estimatedTasksPerMachine;
@@ -36,6 +36,7 @@ public class PeriodCostTracker {
         this.estimatedTasksPerMachine = 2 * (1 + (schedule.getTaskAssignments().size() / schedule.getMachines().size()));
         this.machine = m;
         this.lastPeriod = Period.get(1440 / schedule.getResolution() - 1);
+        this.activeTasks = new LinkedHashMap<Period, Set<TaskAssignment>>(this.lastPeriod.getId() + 1);
         this.latestValuation = this.valuateIdleTime();
     }
 

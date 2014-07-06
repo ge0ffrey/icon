@@ -16,10 +16,11 @@ public class MachineCostTracker {
     private long cost = 0;
 
     private final Schedule schedule;
-    private final Map<Machine, PeriodCostTracker> subtrackers = new LinkedHashMap<Machine, PeriodCostTracker>();
+    private final Map<Machine, PeriodCostTracker> subtrackers;
 
     public MachineCostTracker(final Schedule schedule) {
         this.schedule = schedule;
+        this.subtrackers = new LinkedHashMap<Machine, PeriodCostTracker>(schedule.getMachines().size());
     }
 
     public void add(final TaskAssignment ta) {
