@@ -24,6 +24,7 @@ public class Main {
         solver.solve(solution);
         final Schedule bestSolution = (Schedule) solver.getBestSolution();
         iconSolutionFileIO.write(bestSolution, new File(inputFolder, "solution.txt"));
+        System.out.println("Score achieved: " + bestSolution.getScore());
     }
 
 }
