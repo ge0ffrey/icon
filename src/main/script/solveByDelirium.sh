@@ -13,21 +13,25 @@ processCount=4
 jvmOptions="-Xms1024m -Xmx1536m -server"
 mainJar=icon-core-0.9-SNAPSHOT-jar-with-dependencies.jar
 
-echo "Usage: ./solveByDelirium.sh inputFile"
+echo "Usage: ./solveByDelirium.sh inputDir"
 echo "Notes:"
 echo "- OpenJDK 7 must be installed. Get OpenJDK 7 (not just the JRE!)."
 echo "- For JDK, the environment variable JAVA_HOME should be set to the JDK installation directory"
 echo "  For example (linux): export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-i386"
-echo "- The working dir should be the directory of this script."
+echo "- The working dir should probably be the directory of this script."
+echo "- The results are written in the inputDir."
 echo
 
 if [ -f $JAVA_HOME/bin/java ]; then
     echo "Starting examples app with JDK from environment variable JAVA_HOME ($JAVA_HOME)..."
-    for i in $(seq 1 $processCount);
+    for processIndex in $(seq 1 $processCount);
     do
-        echo "Starting process $i"
-        $JAVA_HOME/bin/java ${jvmOptions} -jar ${mainJar} $1 0 $secondsSpentLimit &
+        echo "Starting process $processIndex (out of $processCount)"
+        $JAVA_HOME/bin/java ${jvmOptions} -jar ${mainJar} $1 $processIndex $secondsSpentLimit &
     done
+    # Wait for all processes to finish
+    wait
+    echo "All $processCount processes stopped"
 else
     echo "ERROR: Check if Java is installed and environment variable JAVA_HOME ($JAVA_HOME) is correct."
 fi

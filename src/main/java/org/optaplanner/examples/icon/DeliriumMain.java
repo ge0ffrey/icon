@@ -25,6 +25,8 @@ import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.optaplanner.core.config.solver.termination.TerminationConfig;
 import org.optaplanner.examples.cheaptime.domain.CheapTimeSolution;
+import org.optaplanner.examples.cheaptime.persistence.CheapTimeExporter;
+import org.optaplanner.examples.cheaptime.persistence.CheapTimeImporter;
 import org.optaplanner.examples.cheaptime.persistence.CheapTimeSolutionFileIO;
 import org.optaplanner.examples.icon.domain.Schedule;
 import org.optaplanner.examples.icon.io.IconSolutionFileIO;
@@ -66,13 +68,14 @@ public class DeliriumMain {
     }
     private static void mainGeoffrey(File inputDir, int processIndex, long secondsSpentLimit) {
         Solver solver = buildDeliriumSolver("org/optaplanner/examples/cheaptime/solver/cheapTimeSolverConfig.xml", processIndex, secondsSpentLimit);
-        CheapTimeSolutionFileIO solutionFileIO = new CheapTimeSolutionFileIO();
-        CheapTimeSolution problem = (CheapTimeSolution) solutionFileIO.read(inputDir);
+        CheapTimeImporter importer = new CheapTimeImporter(true);
+        CheapTimeExporter exporter = new CheapTimeExporter(true);
+        CheapTimeSolution problem = (CheapTimeSolution) importer.readSolution(inputDir);
         solver.solve(problem);
         CheapTimeSolution bestSolution = (CheapTimeSolution) solver.getBestSolution();
         HardMediumSoftLongScore bestScore = bestSolution.getScore();
         File outputFile = determineOutputFile(inputDir, processIndex, bestScore.getHardScore(), bestScore.getMediumScore() / 100000000);
-        solutionFileIO.write(bestSolution, outputFile);
+        exporter.writeSolution(bestSolution, outputFile);
     }
 
     private static Solver buildDeliriumSolver(String solverConfigResource, int processIndex, long secondsSpentLimit) {
