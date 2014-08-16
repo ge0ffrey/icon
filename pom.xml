@@ -72,6 +72,10 @@
       <groupId>org.optaplanner</groupId>
       <artifactId>optaplanner-benchmark</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.optaplanner</groupId>
+      <artifactId>optaplanner-examples</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>it.unimi.dsi</groupId>
@@ -106,7 +110,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.optaplanner.examples.icon.Main</mainClass>
+              <mainClass>org.optaplanner.examples.icon.DeliriumMain</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
@@ -123,6 +127,45 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>copyStuff</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <copy file="src/main/script/solveByDelirium.sh" tofile="${project.build.directory}/solveByDelirium.sh"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!--<plugin>-->
+        <!--<artifactId>maven-antrun-plugin</artifactId>-->
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<id>copyStuff</id>-->
+            <!--<phase>generate-resources</phase>-->
+            <!--<goals>-->
+              <!--<goal>run</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+              <!--<target>-->
+                <!--<tasks>-->
+                  <!--<echo>hallllllllllloo</echo>-->
+                  <!--<copy file="src/main/script/solveByDelirium.sh" tofile="${project.build.directory}/solveByDelirium.sh"/>-->
+                <!--</tasks>-->
+              <!--</target>-->
+            <!--</configuration>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      <!--</plugin>-->
     </plugins>
     <pluginManagement>
       <plugins>
