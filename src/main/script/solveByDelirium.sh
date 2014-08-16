@@ -3,11 +3,10 @@
 # Change directory to the directory of the script
 cd `dirname $0`
 
-# TODO should be set to 300
-secondsSpentLimit=10
+# TODO if the script overhead is too high, feel free to lower this to less than 5 minutes
+secondsSpentLimit=300
 # the machine has 24 threads, but let's be conservative and only take half
-# TODO should be set 12
-processCount=4
+processCount=12
 
 # Stay off
 jvmOptions="-Xms1024m -Xmx1536m -server"
