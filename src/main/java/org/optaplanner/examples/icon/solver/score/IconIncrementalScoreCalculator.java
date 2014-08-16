@@ -76,12 +76,6 @@ public class IconIncrementalScoreCalculator implements IncrementalScoreCalculato
     }
 
     @Override
-    public String buildScoreCorruptionAnalysis(final IncrementalScoreCalculator uncorruptedIncrementalScoreCalculator) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public HardSoftLongScore calculateScore() {
         final long hardScore = this.resourceConsumption.getOverusedCapacity();
         final long softScore = this.costsOfRunningTasks.getCost() + this.costsOfRunningMachines.getCost();
