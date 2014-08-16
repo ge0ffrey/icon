@@ -30,7 +30,7 @@ if [ -f $JAVA_HOME/bin/java ]; then
     done
     # Wait for all processes to finish
     wait
-    echo "All $processCount processes stopped"
+    echo "All $processCount processes stopped. Result files written in: $1 (take the best file)"
 else
     echo "ERROR: Check if Java is installed and environment variable JAVA_HOME ($JAVA_HOME) is correct."
 fi
